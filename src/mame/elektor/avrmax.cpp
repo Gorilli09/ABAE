@@ -80,7 +80,7 @@ private:
 	// devices/pointers
 	required_device<atmega88_device> m_maincpu;
 	optional_device<pwm_display_device> m_digit_pwm;
-	optional_device<hd44780_device> m_lcd;
+	optional_device<hd44780u_device> m_lcd;
 	required_ioport_array<4> m_inputs;
 
 	u8 m_inp_mux = 0;
@@ -281,7 +281,7 @@ void avrmax_state::atm18mcc(machine_config &config)
 	m_maincpu->gpio_out<atmega88_device::GPIOD>().set(FUNC(avrmax_state::lcd_w));
 
 	// video hardware
-	auto &screen(SCREEN(config, "screen", SCREEN_TYPE_LCD));
+	auto &screen(SCREEN(config, "screen").set_lcd());
 	screen.set_refresh_hz(60);
 	screen.set_size(20 * 6 + 1, 4 * 9 + 1);
 	screen.set_visarea_full();

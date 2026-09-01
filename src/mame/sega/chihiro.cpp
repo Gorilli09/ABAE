@@ -463,7 +463,7 @@ class jvs_master : public jvs_host
 {
 public:
 	// construction/destruction
-	jvs_master(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	jvs_master(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 	int get_sense_line();
 	void send_packet(int destination, int length, uint8_t *data);
 	int received_packet(uint8_t *buffer);
@@ -1506,42 +1506,49 @@ void ohci_hlean2131sc_device::device_start()
 
 // ======================> ide_baseboard_device
 
-class ide_baseboard_device : public ata_mass_storage_device_base, public device_ata_interface
+class ide_baseboard_device : public device_t, public device_ata_mass_storage_device_interface, public device_ata_interface
 {
 public:
+	using ide_event_delegate = device_delegate<void (int, uint8_t *, uint8_t *)>;
+	using ide_dimmboard_delegate = device_delegate<uint8_t * (uint32_t)>;
+
 	// construction/destruction
 	ide_baseboard_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
+	template <typename... T> void set_ide_event(T &&... args) { ide_event_cb.set(std::forward<T>(args)...); }
+	template <typename... T> void set_ide_dimmboard(T &&... args) { ide_dimmboard_cb.set(std::forward<T>(args)...); }
+
 	// device_ata_interface implementation
-	virtual uint16_t read_dma() override { return dma_r(); }
-	virtual uint16_t read_cs0(offs_t offset, uint16_t mem_mask) override { return command_r(offset); }
-	virtual uint16_t read_cs1(offs_t offset, uint16_t mem_mask) override { return control_r(offset); }
+	virtual void read_dma(PAIR16 &data) override { dma_r(data); }
+	virtual void read_cs0(offs_t offset, PAIR16 &data) override { command_r(offset, data); }
+	virtual void read_cs1(offs_t offset, PAIR16 &data) override { control_r(offset, data); }
 
 	virtual void write_dma(uint16_t data) override { dma_w(data); }
-	virtual void write_cs0(offs_t offset, uint16_t data, uint16_t mem_mask) override { command_w(offset, data); }
-	virtual void write_cs1(offs_t offset, uint16_t data, uint16_t mem_mask) override { control_w(offset, data); }
+	virtual void write_cs0(offs_t offset, uint16_t data) override { command_w(offset, data); }
+	virtual void write_cs1(offs_t offset, uint16_t data) override { control_w(offset, data); }
 
 	virtual void write_dmack(int state) override { set_dmack_in(state); }
 	virtual void write_csel(int state) override { set_csel_in(state); }
 	virtual void write_dasp(int state) override { set_dasp_in(state); }
 	virtual void write_pdiag(int state) override { set_pdiag_in(state); }
 
-	// ata_mass_storage_device_base implementation
-	virtual int  read_sector(uint32_t lba, void *buffer) override;
-	virtual int  write_sector(uint32_t lba, const void *buffer) override;
+	// device_ata_mass_storage_device_interface implementation
+	virtual int read_sector(uint64_t lba, void *buffer) override;
+	virtual int write_sector(uint64_t lba, const void *buffer) override;
 
 protected:
 	// device_t implementation
 	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override ATTR_COLD;
 
+	ide_event_delegate ide_event_cb;
+	ide_dimmboard_delegate ide_dimmboard_cb;
 	uint8_t read_buffer[0x20]{};
 	uint8_t write_buffer[0x20]{};
-	chihiro_state *chihirosystem{};
 	static const int size_factor = 2;
 
 private:
-	// ata_hle_device_base implementation
+	// device_ata_hle_interface implementation
 	virtual void set_irq_out(int state) override { device_ata_interface::set_irq(state); }
 	virtual void set_dmarq_out(int state) override { device_ata_interface::set_dmarq(state); }
 	virtual void set_dasp_out(int state) override { device_ata_interface::set_dasp(state); }
@@ -1560,8 +1567,11 @@ DEFINE_DEVICE_TYPE(IDE_BASEBOARD, ide_baseboard_device, "ide_baseboard", "IDE Ba
 //-------------------------------------------------
 
 ide_baseboard_device::ide_baseboard_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: ata_mass_storage_device_base(mconfig, IDE_BASEBOARD, tag, owner, clock)
+	: device_t(mconfig, IDE_BASEBOARD, tag, owner, clock)
+	, device_ata_mass_storage_device_interface(mconfig, *this)
 	, device_ata_interface(mconfig, *this)
+	, ide_event_cb(*this)
+	, ide_dimmboard_cb(*this)
 {
 }
 
@@ -1571,8 +1581,9 @@ ide_baseboard_device::ide_baseboard_device(const machine_config &mconfig, const 
 
 void ide_baseboard_device::device_start()
 {
-	ata_mass_storage_device_base::device_start();
-	chihirosystem = machine().driver_data<chihiro_state>();
+	ide_event_cb.resolve();
+	ide_dimmboard_cb.resolve();
+
 	// savestates
 	save_item(NAME(read_buffer));
 	save_item(NAME(write_buffer));
@@ -1592,11 +1603,9 @@ void ide_baseboard_device::device_reset()
 		ide_build_identify_device();
 		m_can_identify_device = 1;
 	}
-
-	ata_mass_storage_device_base::device_reset();
 }
 
-int ide_baseboard_device::read_sector(uint32_t lba, void *buffer)
+int ide_baseboard_device::read_sector(uint64_t lba, void *buffer)
 {
 	int off;
 	uint8_t *data;
@@ -1639,14 +1648,14 @@ int ide_baseboard_device::read_sector(uint32_t lba, void *buffer)
 			memcpy(buffer, write_buffer, 0x20);
 		return 1;
 	}
-	// in a type 1 chihiro this gets data from the dimm board memory
-	data = chihirosystem->baseboard_ide_dimmboard(lba);
+	// in a type 1 chihiro this gets data from the DIMM board memory
+	data = ide_dimmboard_cb(lba);
 	if (data != nullptr)
 		memcpy(buffer, data, 512);
 	return 1;
 }
 
-int ide_baseboard_device::write_sector(uint32_t lba, const void *buffer)
+int ide_baseboard_device::write_sector(uint64_t lba, const void *buffer)
 {
 	logerror("baseboard: write sector lba %08x\n", lba);
 	if (lba >= ((0x40000 << size_factor) - 0x8000)) {
@@ -1656,7 +1665,7 @@ int ide_baseboard_device::write_sector(uint32_t lba, const void *buffer)
 		else if (lba == 0x4801) {
 			memcpy(write_buffer, buffer, 0x20);
 			// call chihiro driver
-			chihirosystem->baseboard_ide_event(3, read_buffer, write_buffer);
+			ide_event_cb(3, read_buffer, write_buffer);
 		}
 	}
 	return 1;
@@ -1864,7 +1873,7 @@ void chihiro_state::machine_start()
 class sega_network_board : public device_t
 {
 public:
-	sega_network_board(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	sega_network_board(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
@@ -1922,14 +1931,21 @@ void chihiro_state::chihiro_base(machine_config &config)
 	m_maincpu->set_addrmap(AS_IO, &chihiro_state::chihiro_map_io);
 
 	subdevice<ide_controller_32_device>("pci:09.0:ide1")->options(ide_baseboard, nullptr, "bb", true);
+	subdevice<device_slot_interface>("pci:09.0:ide1:1")->set_option_machine_config("bb",
+			[this] (device_t *device)
+			{
+				auto &baseboard(downcast<ide_baseboard_device &>(*device));
+				baseboard.set_ide_event(*this, FUNC(chihiro_state::baseboard_ide_event));
+				baseboard.set_ide_dimmboard(*this, FUNC(chihiro_state::baseboard_ide_dimmboard));
+			});
 
 	OHCI_USB_CONNECTOR(config, "pci:02.0:port1", usb_baseboard, "an2131qc", true).set_option_machine_config("an2131qc", an2131qc_configuration);
 	OHCI_USB_CONNECTOR(config, "pci:02.0:port2", usb_baseboard, "an2131sc", true).set_option_machine_config("an2131sc", an2131sc_configuration);
 	OHCI_USB_CONNECTOR(config, "pci:02.0:port3", usb_baseboard, nullptr, false);
 	OHCI_USB_CONNECTOR(config, "pci:02.0:port4", usb_baseboard, nullptr, false);
 
-	JVS_MASTER(config, "jvs_master", 0);
-	sega_837_13551_device &sega837(SEGA_837_13551(config, "837_13551", 0, "jvs_master"));
+	JVS_MASTER(config, "jvs_master");
+	sega_837_13551_device &sega837(SEGA_837_13551(config, "837_13551", "jvs_master"));
 	sega837.set_port_tag<0>("TILT");
 	sega837.set_port_tag<1>("P1");
 	sega837.set_port_tag<2>("P2");
@@ -1949,7 +1965,7 @@ void chihiro_state::chihirogd(machine_config &config)
 	chihiro_base(config);
 	NAOMI_GDROM_BOARD(config, m_dimmboard, 0, ":gdrom", "pic");
 	m_dimmboard->irq_callback().set_nop();
-	SEGA_NETWORK_BOARD(config, "network", 0);
+	SEGA_NETWORK_BOARD(config, "network");
 }
 
 #define ROM_LOAD16_WORD_SWAP_BIOS(bios,name,offset,length,hash) \

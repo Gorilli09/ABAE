@@ -350,15 +350,6 @@ INPUT_PORTS_END
 
 /* Interrupts */
 
-void coleco_state::coleco_vdp_interrupt(int state)
-{
-	// NMI on rising edge
-	if (state && !m_last_nmi_state)
-		m_maincpu->pulse_input_line(INPUT_LINE_NMI, attotime::zero);
-
-	m_last_nmi_state = state;
-}
-
 TIMER_CALLBACK_MEMBER(coleco_state::paddle_d7reset_callback)
 {
 	m_joy_d7_state[param] = 0;
@@ -530,7 +521,6 @@ void coleco_state::machine_start()
 	}
 
 	save_item(NAME(m_joy_mode));
-	save_item(NAME(m_last_nmi_state));
 	save_item(NAME(m_joy_irq_state));
 	save_item(NAME(m_joy_d7_state));
 	save_item(NAME(m_joy_analog_state));
@@ -546,7 +536,6 @@ void bit90_state::machine_start()
 
 void coleco_state::machine_reset()
 {
-	m_last_nmi_state = 0;
 }
 
 void bit90_state::machine_reset()
@@ -583,8 +572,8 @@ void coleco_state::coleco(machine_config &config)
 	tms9928a_device &vdp(TMS9928A(config, "tms9928a", XTAL(10'738'635)));
 	vdp.set_screen("screen");
 	vdp.set_vram_size(0x4000);
-	vdp.int_callback().set(FUNC(coleco_state::coleco_vdp_interrupt));
-	SCREEN(config, "screen", SCREEN_TYPE_RASTER);
+	vdp.int_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
+	SCREEN(config, "screen");
 
 	/* sound hardware */
 	SPEAKER(config, "mono").front_center();
@@ -617,7 +606,7 @@ void coleco_state::colecop(machine_config &config)
 	tms9929a_device &vdp(TMS9929A(config.replace(), "tms9928a", XTAL(10'738'635)));
 	vdp.set_screen("screen");
 	vdp.set_vram_size(0x4000);
-	vdp.int_callback().set(FUNC(coleco_state::coleco_vdp_interrupt));
+	vdp.int_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
 }
 
 void bit90_state::bit90(machine_config &config)
@@ -632,8 +621,8 @@ void bit90_state::bit90(machine_config &config)
 	tms9929a_device &vdp(TMS9929A(config, "tms9928a", XTAL(10'738'635)));
 	vdp.set_screen("screen");
 	vdp.set_vram_size(0x4000);
-	vdp.int_callback().set(FUNC(coleco_state::coleco_vdp_interrupt));
-	SCREEN(config, "screen", SCREEN_TYPE_RASTER);
+	vdp.int_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
+	SCREEN(config, "screen");
 
 	/* sound hardware */
 	SPEAKER(config, "mono").front_center();
@@ -672,7 +661,7 @@ void coleco_state::dina(machine_config &config)
 	tms9929a_device &vdp(TMS9929A(config.replace(), "tms9928a", XTAL(10'738'635)));
 	vdp.set_screen("screen");
 	vdp.set_vram_size(0x4000);
-	vdp.int_callback().set(FUNC(coleco_state::coleco_vdp_interrupt));
+	vdp.int_callback().set_inputline(m_maincpu, INPUT_LINE_NMI);
 }
 
 
@@ -693,6 +682,11 @@ ROM_END
 ROM_START (onyx)
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "onyx.rom", 0x0000, 0x2000, CRC(011c32e7) SHA1(f44263221e330b2590dffc1a6f43ed2591fe19be) )
+ROM_END
+
+ROM_START (splice)
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD( "placa1_bios.bin", 0x0000, 0x2000, CRC(a9d089e2) SHA1(faffd3f2a42d38e13638c2d69d8e06f83de267c7) )
 ROM_END
 
 /*  PAL Colecovision BIOS
@@ -772,6 +766,7 @@ ROM_END
 //    YEAR  NAME      PARENT  COMPAT  MACHINE   INPUT   CLASS         INIT        COMPANY             FULLNAME                            FLAGS
 CONS( 1982, coleco,   0,      0,      coleco,   coleco, coleco_state, empty_init, "Coleco",           "ColecoVision (NTSC)",              0 )
 CONS( 1982, onyx,     coleco, 0,      coleco,   coleco, coleco_state, empty_init, "Microdigital",     "Onyx (Brazil/Prototype)",          0 )
+CONS( 1983, splice,   coleco, 0,      coleco,   coleco, coleco_state, empty_init, "Splice",           "SpliceVision (Brazil)",            0 )
 CONS( 1983, colecop,  coleco, 0,      colecop,  coleco, coleco_state, empty_init, "Coleco",           "ColecoVision (PAL)",               0 )
 CONS( 1986, czz50,    0,      coleco, czz50,    czz50,  coleco_state, empty_init, "Bit Corporation",  "Chuang Zao Zhe 50",                0 )
 CONS( 1988, dina,     czz50,  0,      dina,     czz50,  coleco_state, empty_init, "Telegames",        "Dina",                             0 )

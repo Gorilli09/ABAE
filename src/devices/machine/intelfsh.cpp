@@ -44,6 +44,7 @@ enum
 	FM_WRITEBUFFER1, // part 1 of write to buffer sequence
 	FM_WRITEBUFFER2, // part 2 of write to buffer sequence
 	FM_FAST_RESET,
+	FM_WRITEPAGEWINBOND,
 };
 
 
@@ -95,6 +96,7 @@ DEFINE_DEVICE_TYPE(AMD_29F080,               amd_29f080_device,               "a
 DEFINE_DEVICE_TYPE(AMD_29F400T,              amd_29f400t_device,              "amd_29f400t",              "AMD 29F400T Flash")
 DEFINE_DEVICE_TYPE(AMD_29F800T,              amd_29f800t_device,              "amd_29f800t",              "AMD 29F800T Flash")
 DEFINE_DEVICE_TYPE(AMD_29F800B_16BIT,        amd_29f800b_16bit_device,        "amd_29f800b_16bit",        "AMD 29F800B Flash (16-bit)")
+DEFINE_DEVICE_TYPE(AMD_29LV160DT,            amd_29lv160dt_device,            "amd_29lv160dt",            "AMD 29LV160DT Flash")
 DEFINE_DEVICE_TYPE(AMD_29LV200T,             amd_29lv200t_device,             "amd_29lv200t",             "AMD 29LV200T Flash")
 DEFINE_DEVICE_TYPE(FUJITSU_29F160TE,         fujitsu_29f160te_device,         "mbm29f160te",              "Fujitsu MBM29F160TE Flash")
 DEFINE_DEVICE_TYPE(FUJITSU_29F160TE_16BIT,   fujitsu_29f160te_16bit_device,   "mbm29f160te_16bit",        "Fujitsu MBM29F160TE Flash (16-bit)")
@@ -108,7 +110,9 @@ DEFINE_DEVICE_TYPE(MACRONIX_29F1610MC,       macronix_29f1610mc_device,       "m
 DEFINE_DEVICE_TYPE(MACRONIX_29F1610MC_16BIT, macronix_29f1610mc_16bit_device, "macronix_29f1610mc_16bit", "Macronix 29F1610MC Flash (16-bit)")
 DEFINE_DEVICE_TYPE(MACRONIX_29L001MC,        macronix_29l001mc_device,        "macronix_29l001mc",        "Macronix 29L001MC Flash")
 DEFINE_DEVICE_TYPE(MACRONIX_29LV160TMC,      macronix_29lv160tmc_device,      "macronix_29lv160tmc",      "Macronix 29LV160TMC Flash")
+DEFINE_DEVICE_TYPE(MACRONIX_29LV320ETTI,     macronix_29lv320etti_device,     "macronix_29lv320etti",     "Macronix 29LV320ETTI Flash")
 DEFINE_DEVICE_TYPE(ST_M29W640GB,             st_m29w640gb_device,             "st_m29w640gb",             "ST M29W640GB Flash")
+DEFINE_DEVICE_TYPE(ST_M29W640FT,             st_m29w640ft_device,             "st_m29w640ft",             "ST M29W640FT Flash")
 DEFINE_DEVICE_TYPE(TMS_29F040,               tms_29f040_device,               "tms_29f040",               "Texas Instruments 29F040 Flash")
 
 DEFINE_DEVICE_TYPE(PANASONIC_MN63F805MNP,    panasonic_mn63f805mnp_device,    "panasonic_mn63f805mnp",    "Panasonic MN63F805MNP Flash")
@@ -139,6 +143,7 @@ DEFINE_DEVICE_TYPE(CAT28F020,                cat28f020_device,                "c
 
 DEFINE_DEVICE_TYPE(TC58FVT800,               tc58fvt800_device,               "tc58fvt800",               "Toshiba TC58FVT800 Flash")
 
+DEFINE_DEVICE_TYPE(WINBOND_W29C020C,         winbond_w29c020c_device,               "winbond_w29c020c",               "Winbond W29C020C Flash")
 
 
 //**************************************************************************
@@ -237,6 +242,9 @@ amd_29f800t_device::amd_29f800t_device(const machine_config &mconfig, const char
 amd_29f800b_16bit_device::amd_29f800b_16bit_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: intelfsh16_device(mconfig, AMD_29F800B_16BIT, tag, owner, clock, 0x100000, MFG_AMD, 0x2258) { m_top_boot_sector = false; }
 
+amd_29lv160dt_device::amd_29lv160dt_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	: intelfsh8_device(mconfig, AMD_29LV160DT, tag, owner, clock, 0x200000, MFG_AMD, 0xc4) {}
+
 amd_29lv200t_device::amd_29lv200t_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: intelfsh8_device(mconfig, AMD_29LV200T, tag, owner, clock, 0x40000, MFG_AMD, 0x3b) { }
 
@@ -261,8 +269,14 @@ macronix_29l001mc_device::macronix_29l001mc_device(const machine_config &mconfig
 macronix_29lv160tmc_device::macronix_29lv160tmc_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: intelfsh8_device(mconfig, MACRONIX_29LV160TMC, tag, owner, clock, 0x20000, MFG_MACRONIX, 0x49) { m_sector_is_16k = true; }
 
+macronix_29lv320etti_device::macronix_29lv320etti_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	: intelfsh8_device(mconfig, MACRONIX_29LV320ETTI, tag, owner, clock, 0x400000, MFG_MACRONIX, 0x22A7) { m_top_boot_sector = true; }
+
 st_m29w640gb_device::st_m29w640gb_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: intelfsh8_device(mconfig, ST_M29W640GB, tag, owner, clock, 0x800000, MFG_ST, 0x227e) { m_bot_boot_sector = true; m_device_id2 = 0x2210; m_device_id3 = 0x2200; }
+
+st_m29w640ft_device::st_m29w640ft_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	: intelfsh16_device(mconfig, ST_M29W640FT, tag, owner, clock, 0x800000, MFG_ST, 0x22ed) { m_bot_boot_sector = true; m_device_id2 = 0x2210; m_device_id3 = 0x2200; }
 
 panasonic_mn63f805mnp_device::panasonic_mn63f805mnp_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: intelfsh8_device(mconfig, PANASONIC_MN63F805MNP, tag, owner, clock, 0x10000, MFG_PANASONIC, 0x1b) { m_sector_is_4k = true; }
@@ -335,6 +349,12 @@ tms_29f040_device::tms_29f040_device(const machine_config &mconfig, const char *
 
 tc58fvt800_device::tc58fvt800_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: intelfsh16_device(mconfig, TC58FVT800, tag, owner, clock, 0x100000, MFG_TOSHIBA, 0x4f) { m_top_boot_sector = true; }
+
+winbond_w29c020c_device::winbond_w29c020c_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+	: intelfsh16_device(mconfig, WINBOND_W29C020C, tag, owner, clock, 0x40000, MFG_WINBOND, 0x45) {
+	m_addrmask = 0xffff;
+	m_page_size = 0x80;
+}
 
 //-------------------------------------------------
 //  device_start - device-specific startup
@@ -502,6 +522,24 @@ uint32_t intelfsh_device::read_full(uint32_t address)
 				case 0x1e: data = m_device_id3; break;
 			}
 		}
+		else if (m_maker_id == MFG_WINBOND)
+		{
+			// magistr16 checks that the device ID returns either 0x45 or 0x46, on upper byte
+			// (repeated in both nibbles? cfr. page 8)
+			switch (address)
+			{
+				case 0: data = m_maker_id << 8; break;
+				case 1: data = m_device_id << 8; break;
+				// TODO: lockout mode returns 0xff (unused by magistr16)
+				case 2: data = 0xfe << 8; break;
+				default:
+					// should be address $3fff2 only
+					if (!machine().side_effects_disabled())
+						logerror("warning: lockout read %06x\n", address);
+					data = 0xfe << 8;
+					break;
+			}
+		}
 		else
 		{
 			switch (address & 0xff)
@@ -603,7 +641,8 @@ void intelfsh_device::write_full(uint32_t address, uint32_t data)
 			m_flash_mode = FM_NORMAL;
 			break;
 		case 0x90:
-			if ( m_fast_mode && m_maker_id == MFG_FUJITSU ) // reset from fast mode (when fast mode is enabled)
+			// TODO: W640GB also needs this path
+			if ( m_fast_mode && (m_maker_id == MFG_FUJITSU || (m_maker_id == MFG_ST && (m_device_id == 0x22ed || m_device_id == 0x227e))) ) // reset from fast mode (when fast mode is enabled)
 				m_flash_mode = FM_FAST_RESET;
 			else // read ID
 				m_flash_mode = FM_READID;
@@ -626,8 +665,16 @@ void intelfsh_device::write_full(uint32_t address, uint32_t data)
 		case 0x20:  // block erase
 			if (m_maker_id == MFG_SST && m_device_id == 0x61)
 				logerror("Unknown flash mode byte %x\n", data & 0xff);
+			else if (m_maker_id == MFG_ST && (m_device_id == 0x22ed || m_device_id == 0x227e))
+			{
+				// unlock bypass
+				m_flash_mode = FM_NORMAL;
+				m_fast_mode = true;
+			}
 			else
+			{
 				m_flash_mode = FM_CLEARPART1;
+			}
 			break;
 		case 0x60:  // set master lock
 			m_flash_mode = FM_SETMASTER;
@@ -636,8 +683,10 @@ void intelfsh_device::write_full(uint32_t address, uint32_t data)
 			m_flash_mode = FM_READSTATUS;
 			break;
 		case 0xa0: // fast program (fast mode must be enabled)
-			if ( m_fast_mode && m_maker_id == MFG_FUJITSU )
+			if ( m_fast_mode && (m_maker_id == MFG_FUJITSU || (m_maker_id == MFG_ST && (m_device_id == 0x22ed || m_device_id == 0x227e))) )
+			{
 				m_flash_mode = FM_BYTEPROGRAM;
+			}
 			else
 				logerror( "%s: Unknown flash mode byte %x\n", machine().describe_context(), data & 0xff );
 			break;
@@ -723,6 +772,12 @@ void intelfsh_device::write_full(uint32_t address, uint32_t data)
 				m_sdp = true;
 				m_flash_mode = FM_WRITEPAGEATMEL;
 				m_byte_count = 0;
+			}
+			else if (m_maker_id == MFG_WINBOND)
+			{
+				logerror("%s: enter Winbond SDP\n", machine().describe_context());
+				m_byte_count = 0;
+				m_flash_mode = FM_WRITEPAGEWINBOND;
 			}
 			else
 			{
@@ -943,6 +998,11 @@ void intelfsh_device::write_full(uint32_t address, uint32_t data)
 			m_flash_mode = FM_WRITEPAGEATMEL;
 			m_byte_count = 0;
 		}
+		else if (m_maker_id == MFG_WINBOND && (data & 0xff) == 0x60 && (( address & 0xffff ) == 0x5555))
+		{
+			m_flash_mode = FM_READAMDID3;
+			logerror("%s: Winbond enter ID mode\n", machine().describe_context());
+		}
 		else
 		{
 			logerror( "unexpected %08x=%02x in FM_ERASEAMD3\n", address, data & 0xff );
@@ -958,7 +1018,9 @@ void intelfsh_device::write_full(uint32_t address, uint32_t data)
 					m_data[address] &= data;
 			}
 			else
+			{
 				m_data[address] = data;
+			}
 			break;
 		case 16: // senbbs test mode requires this, note, flash type is guessed there based on manufacturer + device ident as markings were erased
 			m_data[address*2] = data >> 8;
@@ -1056,6 +1118,29 @@ void intelfsh_device::write_full(uint32_t address, uint32_t data)
 			}
 		}
 		break;
+	case FM_WRITEPAGEWINBOND:
+		if ((address & 0xffff) == 0x5555 && (data & 0xff) == 0x20)
+		{
+			m_flash_mode = FM_NORMAL;
+		}
+		else
+		{
+			// TODO: magistr16 writes in byte units, confirm me
+			// (and propagates due of 68k byte smearing)
+			m_data[address*2] = data >> 8;
+			m_data[address*2+1] = data;
+
+			m_byte_count++;
+
+			if (m_byte_count == m_page_size)
+			{
+				m_flash_mode = FM_NORMAL;
+				m_sdp = false;
+				m_byte_count = 0;
+			}
+		}
+		break;
+
 	case FM_CLEARPART1:
 		if( ( data & 0xff ) == 0xd0 )
 		{

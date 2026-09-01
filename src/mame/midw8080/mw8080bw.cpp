@@ -335,7 +335,7 @@ void mw8080bw_state::mw8080bw_root(machine_config &config)
 	maincpu.out_inte_func().set(FUNC(mw8080bw_state::int_enable_w));
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(MW8080BW_PIXEL_CLOCK, MW8080BW_HTOTAL, MW8080BW_HBEND, MW8080BW_HPIXCOUNT, MW8080BW_VTOTAL, MW8080BW_VBEND, MW8080BW_VBSTART);
 	m_screen->set_screen_update(FUNC(mw8080bw_state::screen_update_mw8080bw));
 }
@@ -347,17 +347,6 @@ void mw8080bw_state::mw8080bw_root(machine_config &config)
  *  Sea Wolf (PCB #596)
  *
  *************************************/
-
-void seawolf_state::machine_start()
-{
-	mw8080bw_state::machine_start();
-
-	m_exp_lamps.resolve();
-	m_torp_lamps.resolve();
-	m_ready_lamp.resolve();
-	m_reload_lamp.resolve();
-}
-
 
 void seawolf_state::explosion_lamp_w(u8 data)
 {
@@ -2406,26 +2395,6 @@ void mw8080bw_state::phantom2(machine_config &config)
  *
  *************************************/
 
-void bowler_state::machine_start()
-{
-	mw8080bw_state::machine_start();
-
-	m_200_left_light.resolve();
-	m_200_right_light.resolve();
-	m_400_left_light.resolve();
-	m_400_right_light.resolve();
-	m_500_left_light.resolve();
-	m_500_right_light.resolve();
-	m_700_light.resolve();
-	m_x_left_light.resolve();
-	m_x_right_light.resolve();
-	m_regulation_game_light.resolve();
-	m_flash_game_light.resolve();
-	m_straight_ball_light.resolve();
-	m_hook_ball_light.resolve();
-	m_select_game_light.resolve();
-}
-
 uint8_t bowler_state::shift_result_r()
 {
 	/* ZV - not too sure why this is needed, I don't see
@@ -3022,6 +2991,19 @@ ROM_START( checkmat )
 ROM_END
 
 
+ROM_START( checkmata ) // 80-900E PCB, no labels, only a red number stamped on the ROM
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD( "1.h", 0x0000, 0x0200, CRC(15c90cde) SHA1(4721d7bd6331af71bbf51187d770f3f82324c030) )
+	ROM_LOAD( "2.g", 0x0200, 0x0200, CRC(af52a8d0) SHA1(a12c761544fb765afd5e0fd5ae25fdb7e272ace0) )
+	ROM_LOAD( "3.f", 0x0400, 0x0200, CRC(a4650524) SHA1(ef10ba1c57c98a7f323791a892c352936e181426) )
+	ROM_LOAD( "4.e", 0x0600, 0x0200, CRC(d02488c9) SHA1(8080e1c370f431c206a0a62e48157ac0c45cfaf0) )
+	ROM_LOAD( "5.d", 0x0800, 0x0200, CRC(a0477f03) SHA1(67f45468d58d3a1c9f5d24013416cc15231ec0db) )
+	ROM_LOAD( "6.c", 0x0a00, 0x0200, CRC(1ae4e225) SHA1(43476faccc361aacc68b8eca956d7e9b62607901) )
+	ROM_LOAD( "7.b", 0x0c00, 0x0200, CRC(1eb04641) SHA1(f956784cd80a817fe51f0c6c017eabcba203d352) )
+	ROM_LOAD( "8.a", 0x0e00, 0x0200, CRC(b5ce1a2a) SHA1(fe35bddf0ef558743ffc63ac46a1298d82a74df4) )
+ROM_END
+
+
 ROM_START( desertgu )
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "9316.1h",    0x0000, 0x0800, CRC(c0030d7c) SHA1(4d0a3a59d4f8181c6e30966a6b1d19ba5b29c398) )
@@ -3255,7 +3237,7 @@ ROM_END
 
 /* Irecsa bootleg on original Midway PCB.
    There is a Space King II on a PCB silkscreened with Irecsa logos (straight copy of the Midway one), with probably
-   the same ROM contents. */ 
+   the same ROM contents. */
 ROM_START( spcking2ir )
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "gm2_1-2_tms2516.h",  0x0000, 0x0800, CRC(a5cad5b7) SHA1(2f1179d2aabd6fa9b86656bcdea1896909a49aae) )
@@ -3286,7 +3268,8 @@ ROM_END
 /* 610 */ GAMEL( 1976, 280zzzapa,   280zzzap, zzzap,    zzzap,    zzzap_state,    empty_init, ROT0,   "Dave Nutting Associates / Midway",         "280-ZZZAP (set 2)",                              MACHINE_SUPPORTS_SAVE,                           layout_280zzzap )
 /* 611 */ GAMEL( 1976, maze,        0,        maze,     maze,     mw8080bw_state, empty_init, ROT0,   "Midway",                                   "Amazing Maze",                                   MACHINE_SUPPORTS_SAVE,                           layout_maze )
 /* 612 */ GAME(  1977, boothill,    0,        boothill, boothill, boothill_state, empty_init, ROT0,   "Dave Nutting Associates / Midway",         "Boot Hill",                                      MACHINE_SUPPORTS_SAVE )
-/* 615 */ GAME(  1977, checkmat,    0,        checkmat, checkmat, mw8080bw_state, empty_init, ROT0,   "Dave Nutting Associates / Midway",         "Checkmate",                                      MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+/* 615 */ GAME(  1977, checkmat,    0,        checkmat, checkmat, mw8080bw_state, empty_init, ROT0,   "Dave Nutting Associates / Midway",         "Checkmate (set 1)",                              MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+/* 615 */ GAME(  1977, checkmata,   checkmat, checkmat, checkmat, mw8080bw_state, empty_init, ROT0,   "Dave Nutting Associates / Midway",         "Checkmate (set 2)",                              MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 /* 618 */ GAME(  1977, desertgu,    0,        desertgu, desertgu, desertgu_state, empty_init, ROT0,   "Dave Nutting Associates / Midway",         "Desert Gun",                                     MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 /* 618 */ GAME(  1977, roadrunm,    desertgu, desertgu, desertgu, desertgu_state, empty_init, ROT0,   "Midway",                                   "Road Runner (Midway)",                           MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 /* 619 */ GAME(  1977, dplay,       0,        dplay,    dplay,    dplay_state,    empty_init, ROT0,   "Midway",                                   "Double Play",                                    MACHINE_SUPPORTS_SAVE )
@@ -3303,11 +3286,11 @@ ROM_END
 /* 652 */ GAMEL( 1979, phantom2,    0,        phantom2, phantom2, mw8080bw_state, empty_init, ROT0,   "Midway",                                   "Phantom II",                                     MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE, layout_phantom2 )
 /* 730 */ GAME(  1978, bowler,      0,        bowler,   bowler,   bowler_state,   empty_init, ROT90,  "Midway",                                   "Bowling Alley",                                  MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 /* 739 */ GAMEL( 1978, invaders,    0,        invaders, invaders, invaders_state, empty_init, ROT270, "Taito / Midway",                           "Space Invaders / Space Invaders M",              MACHINE_SUPPORTS_SAVE, layout_invaders )
-/* 742 */ GAME(  1978, blueshrk,    0,        blueshrk, blueshrk, mw8080bw_state, empty_init, ROT0,   "Midway",                                   "Blue Shark",                                     MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
-          GAME(  1978, blueshrkmr,  blueshrk, blueshrk, blueshrk, mw8080bw_state, empty_init, ROT0,   "bootleg (Model Racing)",                   "Blue Shark (Model Racing bootleg, set 1)",       MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
-          GAME(  1978, blueshrkmr2, blueshrk, blueshrk, blueshrk, mw8080bw_state, empty_init, ROT0,   "bootleg (Model Racing)",                   "Blue Shark (Model Racing bootleg, set 2)",       MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+/* 742 */ GAME(  1978, blueshrk,    0,        blueshrk, blueshrk, mw8080bw_state, empty_init, ROT0,   "Midway",                                   "Blue Shark (Midway)",                            MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+		  GAME(  1978, blueshrkmr,  blueshrk, blueshrk, blueshrk, mw8080bw_state, empty_init, ROT0,   "bootleg (Model Racing)",                   "Blue Shark (Model Racing bootleg, set 1)",       MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+		  GAME(  1978, blueshrkmr2, blueshrk, blueshrk, blueshrk, mw8080bw_state, empty_init, ROT0,   "bootleg (Model Racing)",                   "Blue Shark (Model Racing bootleg, set 2)",       MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 /* 749 4 Player Bowling Alley (cocktail, dump does not exist) */
 /* 851 */ GAMEL( 1980, invad2ct,    0,        invad2ct, invad2ct, mw8080bw_state, empty_init, ROT90,  "Midway",                                   "Space Invaders II (Midway, cocktail)",           MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE, layout_invad2ct )
-          GAMEL( 1980, spcking2ir,  invad2ct, invaders, invaders, invaders_state, empty_init, ROT270, "bootleg (Irecsa)",                         "Space King Part II (Space Invaders II bootleg)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE, layout_invad2ct )
+		  GAMEL( 1980, spcking2ir,  invad2ct, invaders, invaders, invaders_state, empty_init, ROT270, "bootleg (Irecsa)",                         "Space King Part II (Space Invaders II bootleg)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE, layout_invad2ct )
 /* 852 Space Invaders Deluxe (color hardware, not in this driver) */
 /* 870 Space Invaders Deluxe (cocktail, dump does not exist) */

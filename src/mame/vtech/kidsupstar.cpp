@@ -65,13 +65,13 @@ void kidsupstar_state::kidsupstar(machine_config &config)
 {
 	ARM9(config, m_maincpu, 240'000'000); // Unknown core and frequency
 
-	SCREEN(config, m_screen, SCREEN_TYPE_LCD); // Monochrome 48x48 LCD screen
+	SCREEN(config, m_screen).set_lcd(); // Monochrome 48x48 LCD screen
 	m_screen->set_refresh_hz(60); // Guess
 	m_screen->set_size(48, 48);
 	m_screen->set_visarea(0, 48-1, 0, 48-1);
 	m_screen->set_screen_update(FUNC(kidsupstar_state::screen_update_kidsupstar));
 
-	SPEAKER(config, "mono").front_left();
+	SPEAKER(config, "mono").front_center();
 }
 
 // Spanish machine, may be different between regions.

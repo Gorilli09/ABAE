@@ -101,6 +101,10 @@ static constexpr int M68K_CACR_CEI = 0x04; // Clear Entry in Instruction Cache
 static constexpr int M68K_CACR_FI  = 0x02; // Freeze Instruction Cache
 static constexpr int M68K_CACR_EI  = 0x01; // Enable Instruction Cache
 
+static constexpr u32 M68K_CACR_040_DE   = 0x80000000; // Enable Data Cache
+static constexpr u32 M68K_CACR_040_IE   = 0x00008000; // Enable Instruction Cache
+static constexpr u32 M68K_CACR_040_MASK = M68K_CACR_040_DE | M68K_CACR_040_IE;
+
 /* ======================================================================== */
 /* ================================ MACROS ================================ */
 /* ======================================================================== */
@@ -215,24 +219,54 @@ inline u32 &REG_SP()          { return m_dar[15]; }
 /* Disable certain comparisons if we're not using all CPU types */
 inline u32 CPU_TYPE_IS_COLDFIRE() const    { return ((m_cpu_type) & (CPU_TYPE_COLDFIRE)); }
 
-inline u32 CPU_TYPE_IS_040_PLUS() const    { return ((m_cpu_type) & (CPU_TYPE_040 | CPU_TYPE_EC040)); }
+inline u32 CPU_TYPE_IS_040_PLUS() const    { return ((m_cpu_type) & (CPU_TYPE_040 | CPU_TYPE_EC040 | CPU_TYPE_LC040)); }
 
-inline u32 CPU_TYPE_IS_030_PLUS() const    { return ((m_cpu_type) & (CPU_TYPE_030 | CPU_TYPE_EC030 | CPU_TYPE_040 | CPU_TYPE_EC040)); }
+inline u32 CPU_TYPE_IS_030_PLUS() const    { return ((m_cpu_type) & (CPU_TYPE_030 | CPU_TYPE_EC030 | CPU_TYPE_040 | CPU_TYPE_EC040 | CPU_TYPE_EC040 | CPU_TYPE_LC040)); }
 
-inline u32 CPU_TYPE_IS_020_PLUS() const    { return ((m_cpu_type) & (CPU_TYPE_020 | CPU_TYPE_030 | CPU_TYPE_EC030 | CPU_TYPE_040 | CPU_TYPE_EC040 | CPU_TYPE_FSCPU32 | CPU_TYPE_COLDFIRE)); }
+inline u32 CPU_TYPE_IS_020_PLUS() const    { return ((m_cpu_type) & (CPU_TYPE_020 | CPU_TYPE_030 | CPU_TYPE_EC030 | CPU_TYPE_040 | CPU_TYPE_EC040 | CPU_TYPE_LC040 | CPU_TYPE_FSCPU32 | CPU_TYPE_COLDFIRE)); }
 
 inline u32 CPU_TYPE_IS_020_VARIANT() const { return ((m_cpu_type) & (CPU_TYPE_EC020 | CPU_TYPE_020 | CPU_TYPE_FSCPU32)); }
 
-inline u32 CPU_TYPE_IS_EC020_PLUS() const  { return ((m_cpu_type) & (CPU_TYPE_EC020 | CPU_TYPE_020 | CPU_TYPE_030 | CPU_TYPE_EC030 | CPU_TYPE_040 | CPU_TYPE_EC040 | CPU_TYPE_FSCPU32 | CPU_TYPE_COLDFIRE)); }
+inline u32 CPU_TYPE_IS_EC020_PLUS() const  { return ((m_cpu_type) & (CPU_TYPE_EC020 | CPU_TYPE_020 | CPU_TYPE_030 | CPU_TYPE_EC030 | CPU_TYPE_040 | CPU_TYPE_EC040 | CPU_TYPE_LC040 | CPU_TYPE_FSCPU32 | CPU_TYPE_COLDFIRE)); }
 inline u32 CPU_TYPE_IS_EC020_LESS() const  { return ((m_cpu_type) & (CPU_TYPE_000 | CPU_TYPE_008 | CPU_TYPE_010 | CPU_TYPE_EC020)); }
 
 inline u32 CPU_TYPE_IS_010() const         { return ((m_cpu_type) == CPU_TYPE_010); }
-inline u32 CPU_TYPE_IS_010_PLUS() const    { return ((m_cpu_type) & (CPU_TYPE_010 | CPU_TYPE_EC020 | CPU_TYPE_020 | CPU_TYPE_EC030 | CPU_TYPE_030 | CPU_TYPE_040 | CPU_TYPE_EC040 | CPU_TYPE_FSCPU32 | CPU_TYPE_COLDFIRE)); }
+inline u32 CPU_TYPE_IS_010_PLUS() const    { return ((m_cpu_type) & (CPU_TYPE_010 | CPU_TYPE_EC020 | CPU_TYPE_020 | CPU_TYPE_EC030 | CPU_TYPE_030 | CPU_TYPE_040 | CPU_TYPE_EC040 | CPU_TYPE_LC040 | CPU_TYPE_FSCPU32 | CPU_TYPE_COLDFIRE)); }
 inline u32 CPU_TYPE_IS_010_LESS() const    { return ((m_cpu_type) & (CPU_TYPE_000 | CPU_TYPE_008 | CPU_TYPE_010 | CPU_TYPE_SCC070)); }
 
 inline u32 CPU_TYPE_IS_000() const         { return ((m_cpu_type) == CPU_TYPE_000 || (m_cpu_type) == CPU_TYPE_008); }
 
 inline u32 CPU_TYPE_IS_070() const         { return ((m_cpu_type) == CPU_TYPE_SCC070); }
+
+inline u32 m68ki_shift_cycles(u32 shift) const
+{
+	// this calculation is only for '030+
+	if (!CPU_TYPE_IS_030_PLUS())
+		return 0;
+
+	if (m_cpu_type & (CPU_TYPE_EC030 | CPU_TYPE_030))
+	{
+		if (!BIT_5(m_ir))
+			return 0;
+
+		const u32 operand_bits = 8U << ((m_ir >> 6) & 3);
+		if (shift > operand_bits)
+		{
+			switch ((m_ir >> 3) & 3)
+			{
+			case 0: // ASx
+				return BIT_8(m_ir) ? 0 : 4;
+
+			case 1: // LSx
+				return 2;
+			}
+		}
+
+		return 0;
+	}
+
+	return shift * m_cyc_shift;
+}
 
 
 /* Initiates trace checking before each instruction (t1) */
@@ -1596,6 +1630,24 @@ inline void m68ki_exception_1111()
 
 	/* Use up some clock cycles and undo the instruction's cycles */
 	m_icount -= m_cyc_exception[EXCEPTION_1111] - m_cyc_instruction[m_ir];
+}
+
+// Helper for unimplemented coprocessor instructions
+inline void m68ki_cp_unimplemented(const char *name)
+{
+	const int cpid = (m_ir >> 9) & 7;
+
+	if ((cpid == 0 && m_has_pmmu) || (cpid == 1 && m_has_fpu))
+	{
+		logerror("%s at %08x: called unimplemented instruction %04x (%s)\n",
+				tag(), m_ppc, m_ir, name);
+	}
+	else
+	{
+		logerror("%s at %08x: coprocessor %d not present (%s %04x)\n",
+				tag(), m_ppc, cpid, name, m_ir);
+		m68ki_exception_1111();
+	}
 }
 
 /* Exception for illegal instructions */

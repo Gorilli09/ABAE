@@ -482,7 +482,7 @@ static INPUT_PORTS_START( ctribe )
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN ) PORT_8WAY
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON1 )  // punch
 	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON2 )  // jump
-	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_OPTIONAL // Unused in game but work on input test
+	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON3 )  // Unused in game but work on input test
 	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_START1 )
 
 	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_COIN1 )
@@ -502,7 +502,7 @@ static INPUT_PORTS_START( ctribe )
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN ) PORT_8WAY PORT_PLAYER(2)
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(2)
 	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(2)
-	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_OPTIONAL PORT_PLAYER(2)
+	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(2)
 	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_START2 )
 
 	PORT_DIPNAME( 0x0300, 0x0300, DEF_STR( Coinage ) )  PORT_DIPLOCATION("SW1:1,2")
@@ -527,7 +527,7 @@ static INPUT_PORTS_START( ctribe )
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN ) PORT_8WAY PORT_PLAYER(3)
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(3)
 	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(3)
-	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_OPTIONAL PORT_PLAYER(3)
+	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(3)
 	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_START3 )
 
 	PORT_DIPNAME( 0x0300, 0x0300, DEF_STR( Difficulty ) ) PORT_DIPLOCATION("SW2:1,2")
@@ -564,14 +564,9 @@ static INPUT_PORTS_START( ddragon3b )
 	PORT_INCLUDE( ctribe )
 
 	PORT_MODIFY("IN0")
-	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON3 )  // kick
 	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_UNUSED )
 
-	PORT_MODIFY("IN1")
-	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(2)
-
 	PORT_MODIFY("IN2")
-	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(3)
 	PORT_DIPNAME( 0x0400, 0x0400, "Player Vs. Player Damage" ) PORT_DIPLOCATION("SW2:3")
 	PORT_DIPSETTING(      0x0400, DEF_STR( Off ) )
 	PORT_DIPSETTING(      0x0000, DEF_STR( On ) )
@@ -836,7 +831,7 @@ void ddragon3_state::ddragon3(machine_config &config)
 	m_audiocpu->set_addrmap(AS_PROGRAM, &ddragon3_state::sound_map);
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(28_MHz_XTAL / 4, 448, 0, 320, 272, 8, 248); // HTOTAL and VTOTAL are guessed
 	m_screen->set_screen_update(FUNC(ddragon3_state::screen_update_ddragon3));
 	m_screen->screen_vblank().set(m_spriteram, FUNC(buffered_spriteram16_device::vblank_copy_rising));
@@ -909,7 +904,7 @@ void wwfwfest_state::wwfwfest(machine_config &config)
 	// video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
 
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(28_MHz_XTAL / 4, 448, 0, 320, 272, 8, 248); // HTOTAL and VTOTAL are guessed
 	m_screen->set_screen_update(FUNC(wwfwfest_state::screen_update_wwfwfest));
 	m_screen->set_palette(m_palette);

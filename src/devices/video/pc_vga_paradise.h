@@ -11,9 +11,10 @@
 class pvga1a_vga_device : public svga_device
 {
 public:
+	// Untested banked modes, later chipsets add non-working BitBlt
 	static constexpr feature_type imperfect_features() { return feature::GRAPHICS; }
 
-	pvga1a_vga_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	pvga1a_vga_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	virtual uint8_t mem_r(offs_t offset) override;
 	virtual void mem_w(offs_t offset, uint8_t data) override;
@@ -67,9 +68,14 @@ public:
 	ioport_value egasw3_r();
 	ioport_value egasw2_r();
 	ioport_value egasw1_r();
+
+	void set_vclk2(u32 freq) { m_vclk2 = freq; }
+	void set_vclk2(const XTAL &freq) { m_vclk2 = freq.value(); }
+
 protected:
 	wd90c00_vga_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
+	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override ATTR_COLD;
 
 	virtual void crtc_map(address_map &map) override ATTR_COLD;
@@ -108,6 +114,8 @@ private:
 	devcb_read_line m_cnf13_read_cb;
 	devcb_read_line m_cnf12_read_cb;
 	devcb_read8     m_cnf_write_ddr_cb;
+
+	u32 m_vclk2;
 };
 
 class wd90c11a_vga_device : public wd90c00_vga_device
@@ -158,18 +166,35 @@ private:
 class wd90c31_vga_device : public wd90c30_vga_device
 {
 public:
-	wd90c31_vga_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	wd90c31_vga_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	virtual void ext_io_map(address_map &map) ATTR_COLD;
 
 protected:
 	wd90c31_vga_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
+	virtual space_config_vector memory_space_config() const override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+
+private:
+	address_space_config m_sysctrl_space_config;
+	address_space_config m_bitblt_space_config;
+	address_space_config m_cursor_space_config;
+
+	void sysctrl_map(address_map &map);
+	void bitblt_map(address_map &map);
+	void cursor_map(address_map &map);
+
+	u8 m_ext_index;
+	u8 m_ext_device;
+	bool m_ext_noautoinc;
+	bool m_ext_invalid;
 };
 
 class wd90c33_vga_device : public wd90c31_vga_device
 {
 public:
-	wd90c33_vga_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	wd90c33_vga_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	virtual void ext_io_map(address_map &map) override ATTR_COLD;
 	void localbus_if_map(address_map &map) ATTR_COLD;

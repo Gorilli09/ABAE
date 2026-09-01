@@ -14,11 +14,11 @@
 #include "bu3905.h"
 #include "sa16.h"
 //#include "bus/midi/midi.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8052.h"
 #include "machine/i8251.h"
 #include "mb62h195.h"
 #include "mb63h149.h"
-#include "mb87013.h"
+#include "machine/mb87013.h"
 #include "machine/nvram.h"
 #include "machine/rescap.h"
 #include "machine/upd7001.h"
@@ -200,7 +200,7 @@ void roland_s10_state::s10(machine_config &config)
 {
 	I8032(config, m_maincpu, 12_MHz_XTAL); // SAB8032A
 	m_maincpu->set_addrmap(AS_PROGRAM, &roland_s10_state::prog_map);
-	m_maincpu->set_addrmap(AS_IO, &roland_s10_state::s10_ext_map);
+	m_maincpu->set_addrmap(AS_DATA, &roland_s10_state::s10_ext_map);
 
 	MB62H195(config, m_io);
 	m_io->lc_callback().set(m_lcdc, FUNC(hd44780_device::write));
@@ -228,7 +228,7 @@ void roland_s10_state::s10(machine_config &config)
 	keyscan.int_callback().set_inputline(m_maincpu, MCS51_T1_LINE);
 
 	// LCD unit: LM16155C
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_LCD));
+	screen_device &screen(SCREEN(config, "screen").set_lcd());
 	screen.set_refresh_hz(60);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); /* not accurate */
 	screen.set_screen_update("lcdc", FUNC(hd44780_device::screen_update));
@@ -252,7 +252,7 @@ void roland_s10_state::s10(machine_config &config)
 void roland_s10_state::mks100(machine_config &config)
 {
 	s10(config);
-	m_maincpu->set_addrmap(AS_IO, &roland_s10_state::mks100_ext_map);
+	m_maincpu->set_addrmap(AS_DATA, &roland_s10_state::mks100_ext_map);
 
 	m_io->sout_callback().set_nop();
 	m_io->sck_callback().set_nop();
@@ -266,7 +266,7 @@ void roland_s10_state::mks100(machine_config &config)
 void roland_s220_state::s220(machine_config &config)
 {
 	s10(config);
-	m_maincpu->set_addrmap(AS_IO, &roland_s220_state::s220_ext_map);
+	m_maincpu->set_addrmap(AS_DATA, &roland_s220_state::s220_ext_map);
 
 	m_io->sout_callback().set_nop();
 	m_io->sck_callback().set_nop();

@@ -19,8 +19,8 @@ public:
 		m_maincpu(*this, "maincpu"),
 		m_fdc(*this, "fdc"),
 		m_crtc(*this, "crtc"),
-		m_uart(*this, "uart")
-		{ }
+		m_uart(*this, "muart")
+	{ }
 
 	void yes(machine_config &config);
 
@@ -59,13 +59,13 @@ void yes_state::yes(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &yes_state::program_map);
 	m_maincpu->set_addrmap(AS_IO, &yes_state::io_map);
 
-	I8256(config, "uart", 16_MHz_XTAL / 8);
+	I8256(config, m_uart, 16_MHz_XTAL / 8);
 
 	WD2793(config, m_fdc, 16_MHz_XTAL / 8);
 	//m_fdc->intrq_wr_callback().set(m_uart, FUNC(i8256_device::ir));
 	m_fdc->drq_wr_callback().set(m_maincpu, FUNC(i80186_cpu_device::drq1_w));
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(16_MHz_XTAL, 1016, 0, 640, 314, 0, 240);
 	screen.set_screen_update("crtc", FUNC(hd6845s_device::screen_update));
 

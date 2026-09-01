@@ -18,7 +18,7 @@
 #include "emu.h"
 #include "tube_matchbox.h"
 
-#include "cpu/arm/arm.h"
+#include "cpu/arm7/arm7.h"
 #include "cpu/i86/i286.h"
 #include "cpu/m6502/r65c02.h"
 #include "cpu/m6809/m6809.h"
@@ -33,6 +33,8 @@
 
 
 namespace {
+
+// ======================> bbc_tube_matchbox_device
 
 class bbc_tube_matchbox_device : public device_t, public device_bbc_tube_interface
 {
@@ -160,7 +162,7 @@ private:
 	uint16_t m_irq_vector;
 
 	// ARM2
-	required_device<arm_cpu_device> m_arm2;
+	required_device<arm2_cpu_device> m_arm2;
 	required_region_ptr<uint32_t> m_arm2_rom;
 	memory_passthrough_handler m_arm2_rom_shadow_tap;
 
@@ -309,7 +311,7 @@ void bbc_tube_matchbox_device::ns32016_mem(address_map &map)
 
 
 //-------------------------------------------------
-//  INPUT_PORTS( matchbox )
+//  input_ports - device-specific input ports
 //-------------------------------------------------
 
 static INPUT_PORTS_START(matchbox)
@@ -338,10 +340,6 @@ INPUT_CHANGED_MEMBER(bbc_tube_matchbox_device::dip_changed)
 	m_soft_dip = newval;
 }
 
-//-------------------------------------------------
-//  input_ports - device-specific input ports
-//-------------------------------------------------
-
 ioport_constructor bbc_tube_matchbox_device::device_input_ports() const
 {
 	return INPUT_PORTS_NAME( matchbox );
@@ -349,7 +347,7 @@ ioport_constructor bbc_tube_matchbox_device::device_input_ports() const
 
 
 //-------------------------------------------------
-//  ROM( matchbox )
+//  rom_region - device-specific ROM region
 //-------------------------------------------------
 
 ROM_START( matchbox )
@@ -377,10 +375,6 @@ ROM_START( matchbox )
 	ROM_REGION16_LE(0x8000, "ns32016_rom", 0)
 	ROM_LOAD("tuberom_32016.bin", 0x0000, 0x8000, CRC(11dfca39) SHA1(80343cb198b03ea91c8790d765f7d3869ba9bb32)) // from LX9CoProCombined_20171007_0719_dmb firmware
 ROM_END
-
-//-------------------------------------------------
-//  rom_region - device-specific ROM region
-//-------------------------------------------------
 
 const tiny_rom_entry *bbc_tube_matchbox_device::device_rom_region() const
 {
@@ -443,10 +437,10 @@ void bbc_tube_matchbox_device::device_add_mconfig(machine_config &config)
 	m_pdp11->in_iack().set([this](uint8_t addr) { return m_irq_vector; });
 
 	// ARM2
-	ARM(config, m_arm2, 32_MHz_XTAL);
+	ARM2(config, m_arm2, 32_MHz_XTAL);
 	m_arm2->set_addrmap(AS_PROGRAM, &bbc_tube_matchbox_device::arm2_mem);
 
-	SOFTWARE_LIST(config, "flop_ls_arm").set_original("bbc_flop_arm");
+	SOFTWARE_LIST(config, "flop_ls_arm").set_original("bbc_flop_arm").set_filter("ARM");
 
 	// 32016
 	NS32016(config, m_ns32016, 32_MHz_XTAL);
@@ -891,7 +885,7 @@ void bbc_tube_matchbox_device::pnmi_w(int state)
 		pdp11_irq_encoder(7, state);
 		break;
 	case 0x0c:
-		m_arm2->set_input_line(ARM_FIRQ_LINE, state);
+		m_arm2->set_input_line(arm7_cpu_device::ARM7_FIRQ_LINE, state);
 		break;
 	case 0x0d:
 		m_ns32016->set_input_line(INPUT_LINE_NMI, state);
@@ -923,7 +917,7 @@ void bbc_tube_matchbox_device::pirq_w(int state)
 		pdp11_irq_encoder(6, state);
 		break;
 	case 0x0c:
-		m_arm2->set_input_line(ARM_IRQ_LINE, state);
+		m_arm2->set_input_line(arm7_cpu_device::ARM7_IRQ_LINE, state);
 		break;
 	case 0x0d:
 		m_ns32016->set_input_line(INPUT_LINE_IRQ0, state);

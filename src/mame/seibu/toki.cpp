@@ -92,6 +92,8 @@ Notes:
 
 #include "emu.h"
 
+#include "sei80bu.h"
+
 #include "seibusound.h"
 
 #include "cpu/m68000/m68000.h"
@@ -893,12 +895,12 @@ void toki_state::toki(machine_config &config)
 	m_audiocpu->set_addrmap(AS_OPCODES, &toki_state::toki_audio_opcodes_map);
 	m_audiocpu->set_irq_acknowledge_callback("seibu_sound", FUNC(seibu_sound_device::im0_vector_cb));
 
-	SEI80BU(config, "sei80bu", 0).set_device_rom_tag("audiocpu");
+	SEI80BU(config, "sei80bu", XTAL(14'318'181) / 4).set_device_rom_tag("audiocpu");
 
 	// video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
 
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(XTAL(12'000'000) / 2, 390, 0, 256, 258, 16, 240);
 	m_screen->set_screen_update(FUNC(toki_state::screen_update));
 	m_screen->screen_vblank().set("spriteram", FUNC(buffered_spriteram16_device::vblank_copy_rising));
@@ -917,7 +919,7 @@ void toki_state::toki(machine_config &config)
 	okim6295_device &oki(OKIM6295(config, "oki", XTAL(12'000'000) / 12, okim6295_device::PIN7_HIGH)); // verified on PCB
 	oki.add_route(ALL_OUTPUTS, "mono", 1.0);
 
-	SEIBU_SOUND(config, m_seibu_sound, 0);
+	SEIBU_SOUND(config, m_seibu_sound);
 	m_seibu_sound->int_callback().set_inputline(m_audiocpu, 0);
 	m_seibu_sound->coin_io_callback().set_ioport("COIN");
 	m_seibu_sound->set_rom_tag(m_audiocpu_rom);
@@ -950,7 +952,7 @@ void tokib_state::tokib(machine_config &config)
 	// video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
 
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	// TODO: refresh rate is unknown for bootlegs
 	m_screen->set_refresh_hz(60);
 	m_screen->set_size(32*8, 32*8);

@@ -15,7 +15,7 @@
 #include "emu.h"
 #include "tube_a500.h"
 
-#include "cpu/arm/arm.h"
+#include "cpu/arm7/arm7.h"
 #include "machine/acorn_ioc.h"
 #include "machine/acorn_memc.h"
 #include "machine/acorn_vidc.h"
@@ -29,16 +29,32 @@
 
 namespace {
 
+// ======================> bbc_tube_a500_device
+
 class bbc_tube_a500_device : public device_t, public device_bbc_tube_interface
 {
 public:
-	bbc_tube_a500_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
+	bbc_tube_a500_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+		: bbc_tube_a500_device(mconfig, BBC_TUBE_A500, tag, owner, clock)
+	{
+	}
 
 protected:
-	bbc_tube_a500_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
+	bbc_tube_a500_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock)
+		: device_t(mconfig, type, tag, owner, clock)
+		, device_bbc_tube_interface(mconfig, *this)
+		, m_maincpu(*this, "maincpu")
+		, m_ioc(*this, "ioc")
+		, m_memc(*this, "memc")
+		, m_vidc(*this, "vidc")
+		, m_ula(*this, "ula")
+		, m_irqs(*this, "irqs")
+		, m_fiqs(*this, "fiqs")
+	{
+	}
 
 	// device_t overrides
-	virtual void device_start() override { }
+	virtual void device_start() override ATTR_COLD { }
 
 	// optional information overrides
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
@@ -47,7 +63,7 @@ protected:
 	virtual uint8_t host_r(offs_t offset) override { return m_ula->host_r(offset); }
 	virtual void host_w(offs_t offset, uint8_t data) override { m_ula->host_w(offset, data); }
 
-	required_device<arm_cpu_device> m_maincpu;
+	required_device<arm2_cpu_device> m_maincpu;
 	required_device<acorn_ioc_device> m_ioc;
 	required_device<acorn_memc_device> m_memc;
 	required_device<acorn_vidc10_device> m_vidc;
@@ -68,7 +84,10 @@ private:
 class bbc_tube_a500d_device : public bbc_tube_a500_device
 {
 public:
-	bbc_tube_a500d_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	bbc_tube_a500d_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
+		: bbc_tube_a500_device(mconfig, BBC_TUBE_A500D, tag, owner, clock)
+	{
+	}
 
 protected:
 	// optional information overrides
@@ -149,11 +168,11 @@ const tiny_rom_entry *bbc_tube_a500d_device::device_rom_region() const
 
 void bbc_tube_a500_device::device_add_mconfig(machine_config &config)
 {
-	ARM(config, m_maincpu, 24_MHz_XTAL / 3);
+	ARM2(config, m_maincpu, 24_MHz_XTAL / 3);
 	m_maincpu->set_addrmap(AS_PROGRAM, &bbc_tube_a500_device::arm_mem);
 
-	INPUT_MERGER_ANY_HIGH(config, m_fiqs).output_handler().set_inputline(m_maincpu, ARM_FIRQ_LINE);
-	INPUT_MERGER_ANY_HIGH(config, m_irqs).output_handler().set_inputline(m_maincpu, ARM_IRQ_LINE);
+	INPUT_MERGER_ANY_HIGH(config, m_fiqs).output_handler().set_inputline(m_maincpu, arm7_cpu_device::ARM7_FIRQ_LINE);
+	INPUT_MERGER_ANY_HIGH(config, m_irqs).output_handler().set_inputline(m_maincpu, arm7_cpu_device::ARM7_IRQ_LINE);
 
 	TUBE(config, m_ula);
 	m_ula->pnmi_handler().set(m_fiqs, FUNC(input_merger_device::in_w<0>));
@@ -173,7 +192,7 @@ void bbc_tube_a500_device::device_add_mconfig(machine_config &config)
 
 	ARCHIMEDES_KEYBOARD(config, "keyboard").kout().set(m_ioc, FUNC(acorn_ioc_device::kin_w));
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.screen_vblank().set(m_ioc, FUNC(acorn_ioc_device::ir_w));
 
 	ACORN_VIDC1(config, m_vidc, 24_MHz_XTAL);
@@ -181,7 +200,7 @@ void bbc_tube_a500_device::device_add_mconfig(machine_config &config)
 	m_vidc->vblank().set(m_memc, FUNC(acorn_memc_device::vidrq_w));
 	m_vidc->sound_drq().set(m_memc, FUNC(acorn_memc_device::sndrq_w));
 
-	//SOFTWARE_LIST(config, "flop_ls_arm").set_original("bbc_flop_arm").set_filter("A500");
+	SOFTWARE_LIST(config, "flop_list").set_original("bbc_flop_arm").set_filter("A500");
 }
 
 void bbc_tube_a500d_device::device_add_mconfig(machine_config &config)
@@ -192,38 +211,6 @@ void bbc_tube_a500d_device::device_add_mconfig(machine_config &config)
 
 	m_ioc->peripheral_r<4>().set(m_ula, FUNC(tube_device::parasite_r));
 	m_ioc->peripheral_w<4>().set(m_ula, FUNC(tube_device::parasite_w));
-}
-
-
-//**************************************************************************
-//  LIVE DEVICE
-//**************************************************************************
-
-//-------------------------------------------------
-//  bbc_tube_a500_device - constructor
-//-------------------------------------------------
-
-bbc_tube_a500_device::bbc_tube_a500_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock)
-	: device_t(mconfig, type, tag, owner, clock)
-	, device_bbc_tube_interface(mconfig, *this)
-	, m_maincpu(*this, "maincpu")
-	, m_ioc(*this, "ioc")
-	, m_memc(*this, "memc")
-	, m_vidc(*this, "vidc")
-	, m_ula(*this, "ula")
-	, m_irqs(*this, "irqs")
-	, m_fiqs(*this, "fiqs")
-{
-}
-
-bbc_tube_a500_device::bbc_tube_a500_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: bbc_tube_a500_device(mconfig, BBC_TUBE_A500, tag, owner, clock)
-{
-}
-
-bbc_tube_a500d_device::bbc_tube_a500d_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: bbc_tube_a500_device(mconfig, BBC_TUBE_A500D, tag, owner, clock)
-{
 }
 
 } // anonymous namespace

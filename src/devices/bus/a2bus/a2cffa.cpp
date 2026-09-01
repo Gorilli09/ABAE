@@ -58,6 +58,8 @@ protected:
 	virtual uint8_t read_cnxx(uint8_t offset) override;
 	virtual uint8_t read_c800(uint16_t offset) override;
 	virtual void write_c800(uint16_t offset, uint8_t data) override;
+	virtual bool take_c800() const override { return true; }
+	virtual void reset_from_bus() override;
 
 	required_device<ata_interface_device> m_ata;
 	required_region_ptr<uint8_t> m_rom;
@@ -170,6 +172,11 @@ void a2bus_cffa2000_device::device_start()
 
 void a2bus_cffa2000_device::device_reset()
 {
+	reset_from_bus();
+}
+
+void a2bus_cffa2000_device::reset_from_bus()
+{
 	m_writeprotect = true;
 	m_inwritecycle = false;
 }
@@ -187,16 +194,18 @@ uint8_t a2bus_cffa2000_device::read_c0nx(uint8_t offset)
 			return m_lastreaddata >> 8;
 
 		case 3:
-			m_writeprotect = false;
+			if (!machine().side_effects_disabled())
+				m_writeprotect = false;
 			break;
 
 		case 4:
-			m_writeprotect = true;
+			if (!machine().side_effects_disabled())
+				m_writeprotect = true;
 			break;
 
 		case 8:
 			// Apple /// driver uses sta $c080,x when writing, which causes spurious reads of c088
-			if (!m_inwritecycle)
+			if (!m_inwritecycle && !machine().side_effects_disabled())
 			{
 				m_lastreaddata = m_ata->cs0_r(offset - 8);
 			}
@@ -209,10 +218,10 @@ uint8_t a2bus_cffa2000_device::read_c0nx(uint8_t offset)
 		case 0xd:
 		case 0xe:
 		case 0xf:
-			return m_ata->cs0_r(offset - 8, 0xff);
+			return m_ata->cs0_r(offset - 8);
 	}
 
-	return 0xff;
+	return get_open_bus();
 }
 
 
@@ -255,7 +264,7 @@ void a2bus_cffa2000_device::write_c0nx(uint8_t offset, uint8_t data)
 		case 0xd:
 		case 0xe:
 		case 0xf:
-			m_ata->cs0_w(offset-8, data, 0xff);
+			m_ata->cs0_w(offset-8, data);
 			break;
 	}
 }

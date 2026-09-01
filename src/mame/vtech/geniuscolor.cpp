@@ -50,13 +50,13 @@ void geniuscolor_state::geniuscolor(machine_config &config)
 {
 	// Unknown CPU
 
-	SCREEN(config, m_screen, SCREEN_TYPE_LCD); // 104x48 color LCD screen
+	SCREEN(config, m_screen).set_lcd(); // 104x48 color LCD screen
 	m_screen->set_refresh_hz(60); // Guess
 	m_screen->set_size(104, 48);
 	m_screen->set_visarea(0, 104-1, 0, 48-1);
 	m_screen->set_screen_update(FUNC(geniuscolor_state::screen_update_geniuscolor));
 
-	SPEAKER(config, "mono").front_left();
+	SPEAKER(config, "mono").front_center();
 }
 
 // Spanish machine

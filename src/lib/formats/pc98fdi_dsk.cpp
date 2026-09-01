@@ -88,14 +88,16 @@ bool pc98fdi_format::load(util::random_read &io, uint32_t form_factor, const std
 			std::tie(err, actual) = read_at(io, hsize + sector_size*sector_count*(track*head_count + head), sect_data, sector_size*sector_count); // FIXME: check for errors and premature EOF
 
 			for(int i=0; i<sector_count; i++) {
-				sects[i].track       = track;
-				sects[i].head        = head;
-				sects[i].sector      = i+1;
-				sects[i].size        = ssize;
-				sects[i].actual_size = sector_size;
-				sects[i].deleted     = false;
-				sects[i].bad_crc     = false;
-				sects[i].data        = sect_data + i*sector_size;
+				sects[i].track        = track;
+				sects[i].head         = head;
+				sects[i].sector       = i+1;
+				sects[i].size         = ssize;
+				sects[i].actual_size  = sector_size;
+				sects[i].deleted      = false;
+				sects[i].bad_data_crc = false;
+				sects[i].bad_addr_crc = false;
+				sects[i].weak         = false;
+				sects[i].data         = sect_data + i*sector_size;
 			}
 
 			build_pc_track_mfm(track, head, image, cell_count, sector_count, sects, calc_default_pc_gap3_size(form_factor, sector_size));
@@ -103,11 +105,6 @@ bool pc98fdi_format::load(util::random_read &io, uint32_t form_factor, const std
 	}
 
 	return true;
-}
-
-bool pc98fdi_format::supports_save() const noexcept
-{
-	return false;
 }
 
 const pc98fdi_format FLOPPY_PC98FDI_FORMAT;

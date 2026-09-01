@@ -102,6 +102,8 @@ protected:
 	virtual uint8_t read_cnxx(uint8_t offset) override;
 	virtual uint8_t read_c800(uint16_t offset) override;
 	virtual void write_c800(uint16_t offset, uint8_t data) override;
+	virtual bool take_c800() const override { return true; }
+	virtual void reset_from_bus() override;
 
 	required_device<ata_interface_device> m_ata;
 	required_region_ptr<uint8_t> m_rom;
@@ -237,6 +239,11 @@ void a2bus_vulcaniie_device::device_start()
 
 void a2bus_vulcanbase_device::device_reset()
 {
+	reset_from_bus();
+}
+
+void a2bus_vulcanbase_device::reset_from_bus()
+{
 	m_rombank = m_rambank = 0;
 	m_last_read_was_0 = false;
 }
@@ -264,7 +271,7 @@ uint8_t a2bus_vulcanbase_device::read_c0nx(uint8_t offset)
 			}
 			else
 			{
-				return m_ata->cs0_r(offset, 0xff);
+				return m_ata->cs0_r(offset);
 			}
 
 		case 2:
@@ -273,7 +280,7 @@ uint8_t a2bus_vulcanbase_device::read_c0nx(uint8_t offset)
 		case 5:
 		case 6:
 		case 7:
-			return m_ata->cs0_r(offset, 0xff);
+			return m_ata->cs0_r(offset);
 
 		default:
 			logerror("a2vulcan: unknown read @ C0n%x\n", offset);
@@ -309,7 +316,7 @@ void a2bus_vulcanbase_device::write_c0nx(uint8_t offset, uint8_t data)
 			}
 			else
 			{
-				m_ata->cs0_w(offset, data, 0xff);
+				m_ata->cs0_w(offset, data);
 			}
 			break;
 
@@ -320,7 +327,7 @@ void a2bus_vulcanbase_device::write_c0nx(uint8_t offset, uint8_t data)
 		case 6:
 		case 7:
 //          printf("%02x to IDE controller @ %x\n", data, offset);
-			m_ata->cs0_w(offset, data, 0xff);
+			m_ata->cs0_w(offset, data);
 			break;
 
 		case 9: // ROM bank

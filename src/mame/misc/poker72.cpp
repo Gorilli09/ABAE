@@ -23,7 +23,7 @@ TODO:
 - Demo Sound enabled doesn't produce any sound (?)
 
 Notes:
-- On first boot it will moan about uninitailized RAM, enable service mode then
+- On first boot it will moan about uninitialized RAM, enable service mode then
   press all five hold buttons at same time
   (game is fussy on being exactly pressed together)
 
@@ -31,7 +31,7 @@ Notes:
 
 #include "emu.h"
 
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i80c51.h"
 #include "cpu/z80/z80.h"
 #include "sound/ay8910.h"
 
@@ -361,7 +361,7 @@ void poker72_state::poker72(machine_config &config)
 	I80C51(config, "subcpu", 8000000); // actually 89C51, ? MHz
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(60);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(0));
 	screen.set_size(64*8, 32*8);

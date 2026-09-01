@@ -9,7 +9,7 @@
 #include "emu.h"
 //#include "bus/rs232/rs232.h"
 #include "bus/z29_kbd/keyboard.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8051.h"
 #include "machine/x2212.h"
 #include "video/i8275.h"
 #include "screen.h"
@@ -161,7 +161,7 @@ void z29_state::z29(machine_config &config)
 {
 	I8031(config, m_maincpu, 14.784_MHz_XTAL / 2); // Intel P8031AH
 	m_maincpu->set_addrmap(AS_PROGRAM, &z29_state::prg_map);
-	m_maincpu->set_addrmap(AS_IO, &z29_state::ext_map);
+	m_maincpu->set_addrmap(AS_DATA, &z29_state::ext_map);
 	m_maincpu->port_in_cb<1>().set(FUNC(z29_state::p1_r));
 	m_maincpu->port_out_cb<1>().set(m_keyboard, FUNC(z29_keyboard_port_device::keyout_w)).bit(0).invert();
 	m_maincpu->port_out_cb<3>().set(FUNC(z29_state::p3_w));
@@ -172,7 +172,7 @@ void z29_state::z29(machine_config &config)
 	m_keyboard->keyin_callback().set(FUNC(z29_state::keyin_w));
 	m_keyboard->reset_callback().set_inputline(m_maincpu, INPUT_LINE_RESET).invert();
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(14.784_MHz_XTAL, 880, 0, 640, 280, 0, 250);
 	screen.set_screen_update("crtc1", FUNC(i8276_device::screen_update));
 

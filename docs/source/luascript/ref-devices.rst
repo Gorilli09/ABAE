@@ -152,6 +152,10 @@ device:memregion(tag)
 device:ioport(tag)
     Gets an :ref:`I/O port <luascript-ref-ioport>` by tag relative to the
     device, or ``nil`` if no such I/O port exists.
+device:output(name)
+    Gets an :ref:`output proxy <luascript-ref-outputproxy>` for the output with
+    the specified name relative to the device.  Note that the output will not be
+    created if it does not exist.
 device:subdevice(tag)
     Gets a device by tag relative to the device.
 device:siblingdevice(tag)
@@ -180,6 +184,11 @@ device.configured (read-only)
     A Boolean indicating whether the device has completed configuration.
 device.started (read-only)
     A Boolean indicating whether the device has completed starting.
+device.outputs[] (read-only)
+    A collection of :ref:`output proxies <luascript-ref-outputproxy>` for the
+    device’s outputs, indexed by name.  The index operator and ``index_of``
+    methods have O(log2(n)) complexity; all other supported operations have O(1)
+    complexity.
 device.debug (read-only)
     The :ref:`debugger interface <luascript-ref-devdebug>` to the device if it
     is a CPU device, or ``nil`` if it is not a CPU device or the debugger is not
@@ -417,9 +426,9 @@ screen.height (read-only)
 screen.refresh (read-only)
     The screen’s configured refresh rate in Hertz (this may not reflect the
     current value).
-screen.refresh_attoseconds (read-only)
-    The screen’s configured refresh interval in attoseconds (this may not
-    reflect the current value).
+screen.refresh_interval (read-only)
+    The screen’s configured refresh interval as an :ref:`attotime
+    <luascript-ref-attotime>` (this may not reflect the current value).
 screen.xoffset (read-only)
     The screen’s default X position offset.  This is a floating-point number
     where one (1) corresponds to the X size of the screen’s container.  This may
@@ -457,6 +466,67 @@ screen.palette (read-only)
     The :ref:`palette device <luascript-ref-dipalette>` used to translate pixel
     values to colours, or ``nil`` if the screen uses a direct colour pixel
     format.
+
+
+.. _luascript-ref-vectordev:
+
+Vector device
+-------------
+
+Wraps MAME’s ``vector_device`` class, which represents an emulated X/Y vector display.
+
+Instantiation
+~~~~~~~~~~~~~
+
+manager.machine.vector_devices[tag]
+    Gets a vector device by tag relative to the root machine device, or ``nil``
+    if no such device exists or it is not a vector device.
+
+Base classes
+~~~~~~~~~~~~
+
+* :ref:`luascript-ref-device`
+
+Methods
+~~~~~~~
+
+vector:add_frame_begin_notifier(callback)
+    Add a callback to receive notifications when the processing of vectors
+    begins.  The callback is not passed any arguments.
+    Returns a :ref:`notifier subscription <luascript-ref-notifiersub>`.
+vector:add_frame_end_notifier(callback)
+    Add a callback to receive notifications when the processing of vectors
+    begins.  The callback is not passed any arguments.
+    Returns a :ref:`notifier subscription <luascript-ref-notifiersub>`.
+vector:add_line_notifier(callback)
+    Add a callback to receive notifications when the vector beam moves
+    between two points with a non-zero beam intensity.  The callback is
+    passed the following arguments, in order:  
+    
+    - **lastx:** The old horizontal beam position.
+    - **lasty:** The old vertical beam position.
+    - **x:** The current horizontal beam position.
+    - **y:** The current vertical beam position.
+    - **color:** The beam color, as a 24-bit RGB value.
+    - **intensity:** The beam intensity, as an 8-bit value.
+    - **width:** The configured pixel width of the virtual vector display.
+    - **height:** The configured pixel width of the virtual vector display.
+    
+    Returns a :ref:`notifier subscription <luascript-ref-notifiersub>`.
+vector:add_move_notifier(callback)
+    Add a callback to receive notifications when the vector beam moves
+    with an intensity of zero.  Provided as a convenience feature as
+    the previous position and intensity of the beam is not meaningful
+    when "jumping" the vector beam.  The callback is passed the following
+    arguments, in order:  
+    
+    - **x:** The current horizontal beam position.
+    - **y:** The current vertical beam position.
+    - **color:** The beam color, as a 24-bit RGB value.
+    - **width:** The configured pixel width of the virtual vector display.
+    - **height:** The configured pixel width of the virtual vector display.
+    
+    Returns a :ref:`notifier subscription <luascript-ref-notifiersub>`.
 
 
 .. _luascript-ref-cassdev:

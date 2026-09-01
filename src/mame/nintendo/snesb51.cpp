@@ -62,7 +62,7 @@
 
 #include "emu.h"
 #include "snes.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8051.h"
 #include "emupal.h"
 #include "speaker.h"
 
@@ -261,7 +261,7 @@ void snesb51_state::base(machine_config &config)
 	config.set_perfect_quantum(m_maincpu);
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(DOTCLK_NTSC * 2, SNES_HTOTAL * 2, 0, SNES_SCR_WIDTH * 2, SNES_VTOTAL_NTSC, 0, SNES_SCR_HEIGHT_NTSC);
 	m_screen->set_video_attributes(VIDEO_VARIABLE_WIDTH);
 	m_screen->set_screen_update(FUNC(snes_state::screen_update));
@@ -284,7 +284,7 @@ void snesb51_state::mk3snes(machine_config &config)
 	base(config);
 
 	I8751(config, m_mcu, 12_MHz_XTAL);
-	m_mcu->set_addrmap(AS_IO, &snesb51_state::io_map);
+	m_mcu->set_addrmap(AS_DATA, &snesb51_state::io_map);
 	m_mcu->port_out_cb<1>().set(FUNC(snesb51_state::mcu_p1_w));
 	m_mcu->port_in_cb<3>().set(FUNC(snesb51_state::mcu_p3_r));
 	m_mcu->port_out_cb<3>().set(FUNC(snesb51_state::mcu_p3_w));
@@ -297,7 +297,7 @@ void snesb51_state::snes4sl(machine_config &config)
 	// exact type unknown
 	I8031(config, m_mcu, 12_MHz_XTAL);
 	m_mcu->set_addrmap(AS_PROGRAM, &snesb51_state::mem_map);
-	m_mcu->set_addrmap(AS_IO, &snesb51_state::io_map);
+	m_mcu->set_addrmap(AS_DATA, &snesb51_state::io_map);
 	m_mcu->port_out_cb<1>().set(FUNC(snesb51_state::mcu_p1_w));
 	m_mcu->port_in_cb<3>().set(FUNC(snesb51_state::mcu_p3_r));
 	m_mcu->port_out_cb<3>().set(FUNC(snesb51_state::mcu_p3_w));
@@ -313,7 +313,7 @@ void snesb51_state::snes4sln(machine_config &config)
 
 	I8051(config, m_mcu, 12_MHz_XTAL); // SAB 8051A-P
 	m_mcu->set_addrmap(AS_PROGRAM, &snesb51_state::mem_map);
-	m_mcu->set_addrmap(AS_IO, &snesb51_state::io_map);
+	m_mcu->set_addrmap(AS_DATA, &snesb51_state::io_map);
 	m_mcu->port_out_cb<1>().set(FUNC(snesb51_state::mcu_p1_w));
 	m_mcu->port_in_cb<3>().set(FUNC(snesb51_state::mcu_p3_r));
 	m_mcu->port_out_cb<3>().set(FUNC(snesb51_state::mcu_p3_w));

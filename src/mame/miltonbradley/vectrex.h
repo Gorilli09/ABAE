@@ -1,10 +1,6 @@
 // license:BSD-3-Clause
 // copyright-holders:Mathis Rosenhauer
-/*****************************************************************************
- *
- * includes/vectrex.h
- *
- ****************************************************************************/
+
 #ifndef MAME_MILTONBRADLEY_VECTREX_H
 #define MAME_MILTONBRADLEY_VECTREX_H
 
@@ -13,12 +9,10 @@
 #include "machine/6522via.h"
 #include "sound/dac.h"
 #include "sound/ay8910.h"
-#include "video/vector.h"
+#include "vector.h"
 
 #include "bus/vectrex/slot.h"
 #include "bus/vectrex/rom.h"
-
-#include "screen.h"
 
 #define NVECT 10000
 
@@ -42,8 +36,7 @@ protected:
 		m_io_3dconf(*this, "3DCONF"),
 		m_io_lpenconf(*this, "LPENCONF"),
 		m_io_lpenx(*this, "LPENX"),
-		m_io_lpeny(*this, "LPENY"),
-		m_screen(*this, "screen")
+		m_io_lpeny(*this, "LPENY")
 	{ }
 
 	void psg_port_w(uint8_t data);
@@ -51,7 +44,7 @@ protected:
 	void via_w(offs_t offset, uint8_t data);
 	virtual void driver_start() override;
 	virtual void video_start() override ATTR_COLD;
-	uint32_t screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
+	void vector_update(vector_device &vector);
 	TIMER_CALLBACK_MEMBER(imager_change_color);
 	TIMER_CALLBACK_MEMBER(update_level);
 	TIMER_CALLBACK_MEMBER(imager_eye);
@@ -148,7 +141,6 @@ private:
 	required_ioport m_io_lpenconf;
 	required_ioport m_io_lpenx;
 	required_ioport m_io_lpeny;
-	required_device<screen_device> m_screen;
 };
 
 

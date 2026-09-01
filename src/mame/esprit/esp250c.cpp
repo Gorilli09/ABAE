@@ -134,11 +134,12 @@ uint32_t esp250c_state::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 
 	for (unsigned y = 0; y < 26; y++)
 	{
-		uint32_t addr = get_u24le(&m_vram[y * 3]);
+		uint16_t addr = get_u16le(&m_vram[y * 3]);
+		[[maybe_unused]] uint8_t line_attr = m_vram[y * 3 + 2]; // probably
 
 		for (unsigned x = 0; x < 80; x++)
 		{
-			uint8_t code = m_vram[addr++];
+			uint8_t code = m_vram[addr++ & 0xffff];
 
 			for (int i = 0; i < 16; i++)
 			{
@@ -193,6 +194,7 @@ void esp250c_state::machine_start()
 
 void esp250c_state::machine_reset()
 {
+	m_nmi_enable = false;
 }
 
 
@@ -206,7 +208,7 @@ void esp250c_state::esp250c(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &esp250c_state::mem_map);
 	m_maincpu->set_addrmap(AS_IO, &esp250c_state::io_map);
 
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(50_MHz_XTAL, 1034, 0, 800, 690, 0, 416); // wrong
 	m_screen->set_screen_update(FUNC(esp250c_state::screen_update));
 	m_screen->screen_vblank().set(FUNC(esp250c_state::vblank_w));

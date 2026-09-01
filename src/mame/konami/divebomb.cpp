@@ -221,15 +221,15 @@ TILE_GET_INFO_MEMBER(divebomb_state::get_fg_tile_info)
 
 K051316_CB_MEMBER(divebomb_state::zoom_callback_1)
 {
-	*code |= (*color & 0x03) << 8;
-	*color = 0 + ((m_roz_pal >> 4) & 3);
+	code |= (color & 0x03) << 8;
+	color = 0 + ((m_roz_pal >> 4) & 3);
 }
 
 
 K051316_CB_MEMBER(divebomb_state::zoom_callback_2)
 {
-	*code |= (*color & 0x03) << 8;
-	*color = 4 + (m_roz_pal & 3);
+	code |= (color & 0x03) << 8;
+	color = 4 + (m_roz_pal & 3);
 }
 
 
@@ -700,7 +700,7 @@ void divebomb_state::divebomb(machine_config &config)
 	m_k051316[1]->set_zoom_callback(FUNC(divebomb_state::zoom_callback_2));
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(60);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(0));
 	screen.set_size(256, 256);

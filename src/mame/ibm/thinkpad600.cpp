@@ -121,7 +121,7 @@ Hardware for the 760XD model.
 
 
 IBM ThinkPad 770 was a laptop designed and manufactured by IBM targeted for the business, enterprise and professional user.
-It was the last lineup in the ThinkPad 700-series, succeeding the 760 as the high-end laptop of the ThinkPad lineup. 
+It was the last lineup in the ThinkPad 700-series, succeeding the 760 as the high-end laptop of the ThinkPad lineup.
 The line was produced from October 1997 to May 2000, and eventually replaced by the ThinkPad models A20m and A20p.
 
 Hardware for the 770Z model.
@@ -169,7 +169,6 @@ Hardware for the 770Z model.
 #include "cpu/i386/i386.h"
 #include "machine/ds17x85.h"
 #include "machine/pci.h"
-#include "machine/pci-ide.h"
 #include "machine/i82443bx_host.h"
 #include "machine/i82371eb_isa.h"
 #include "machine/i82371eb_ide.h"
@@ -215,15 +214,12 @@ void thinkpad600_state::mcu_map(address_map &map)
 	map(0x0000, 0xf77f).rom().region("mcu", 0);
 }
 
-static INPUT_PORTS_START(thinkpad600)
-INPUT_PORTS_END
-
 void thinkpad600_state::superio_config(device_t *device)
 {
 	pc97338_device &fdc = *downcast<pc97338_device *>(device);
 //  fdc.set_sysopt_pin(1);
 //  fdc.gp20_reset().set_inputline(":maincpu", INPUT_LINE_RESET);
-//  fdc.gp25_gatea20().set_inputline(":maincpu", INPUT_LINE_A20);
+//  fdc.gp25_gatea20().set(":pci:07.0", FUNC(i82371eb_isa_device::a20gate_w));
 	fdc.irq1().set(":pci:07.0", FUNC(i82371eb_isa_device::pc_irq1_w));
 	fdc.irq8().set(":pci:07.0", FUNC(i82371eb_isa_device::pc_irq8n_w));
 	fdc.txd1().set(":serport0", FUNC(rs232_port_device::write_txd));
@@ -258,7 +254,7 @@ void thinkpad600_state::thinkpad600_base(machine_config &config)
 	mcu.set_addrmap(AS_PROGRAM, &thinkpad600_state::mcu_map);
 //  mcu.set_disable();
 
-	DS17485(config, "rtc", 16'000'000); // Dallas DS17485S-5, unknown clock
+	DS17485(config, "rtc", XTAL(32'768)); // Dallas DS17485S-5, unknown clock
 }
 
 void thinkpad600_state::thinkpad600e(machine_config &config)
@@ -269,19 +265,21 @@ void thinkpad600_state::thinkpad600e(machine_config &config)
 	m_maincpu->smiact().set("pci:00.0", FUNC(i82443bx_host_device::smi_act_w));
 
 	// TODO: PCI config space guessed from a Fujitsu Lifebook, confirm me for ThinkPad
-	PCI_ROOT(config, "pci", 0);
-	I82443BX_HOST(config, "pci:00.0", 0, "maincpu", 64*1024*1024);
+	PCI_ROOT(config, "pci");
+	I82443BX_HOST(config, "pci:00.0", "maincpu", 64*1024*1024);
+
 	i82371eb_isa_device &isa(I82371EB_ISA(config, "pci:07.0", 0, m_maincpu));
 	isa.boot_state_hook().set([](u8 data) { /* printf("%02x\n", data); */ });
 	isa.smi().set_inputline("maincpu", INPUT_LINE_SMI);
+	isa.a20m().set_inputline("maincpu", INPUT_LINE_A20);
 
-	i82371eb_ide_device &ide(I82371EB_IDE(config, "pci:07.1", 0, m_maincpu));
+	i82371eb_ide_device &ide(I82371EB_IDE(config, "pci:07.1", m_maincpu));
 	ide.irq_pri().set("pci:07.0", FUNC(i82371eb_isa_device::pc_irq14_w));
 	ide.irq_sec().set("pci:07.0", FUNC(i82371eb_isa_device::pc_mirq0_w));
 
-	I82371EB_USB (config, "pci:07.2", 0);
-	I82371EB_ACPI(config, "pci:07.3", 0);
-	LPC_ACPI     (config, "pci:07.3:acpi", 0);
+	I82371EB_USB (config, "pci:07.2");
+	I82371EB_ACPI(config, "pci:07.3");
+	ACPI_PIIX4   (config, "pci:07.3:acpi");
 	SMBUS        (config, "pci:07.3:smbus", 0);
 
 //  TODO: modem at "pci:10.0"
@@ -289,6 +287,7 @@ void thinkpad600_state::thinkpad600e(machine_config &config)
 //  TODO: NeoMagic at "pci:14.0" / "pci:14.1" (video & AC'97 integrated sound, likely requires BIOS)
 
 //  TODO: motherboard Super I/O resource here
+	// FIXME: determine ISA bus clock
 	ISA16_SLOT(config, "board4", 0, "pci:07.0:isabus", isa_internal_devices, "pc97338", true).set_option_machine_config("pc97338", superio_config);
 
 	rs232_port_device &serport0(RS232_PORT(config, "serport0", isa_com, nullptr));
@@ -314,13 +313,13 @@ void thinkpad600_state::thinkpad600(machine_config &config)
 	m_maincpu->set_disable();
 
 	// TODO: fill me, uses earlier PIIX4 AB
-	PCI_ROOT(config, "pci", 0);
+	PCI_ROOT(config, "pci");
 
 	thinkpad600_base(config);
 }
 
 
-ROM_START(thinkpad760xd)
+ROM_START(tpad760xd)
 	ROM_REGION( 0x80000, "pci:07.0", 0 )
 	ROM_LOAD( "e28f004_89g8164_rev37_h1897m.u17",      0x00000, 0x80000, CRC(6092594f) SHA1(25681e4952a432e1170f69ae75f3260245b6b44b) ) // BIOS
 
@@ -331,7 +330,7 @@ ROM_START(thinkpad760xd)
 	ROM_LOAD( "st93c46c.u30",                          0x00000, 0x00080, CRC(22cac7b5) SHA1(ee48ecf5d59e243e9afb0ca7e41ed8437eec8097) ) // BIOS settings
 ROM_END
 
-ROM_START(thinkpad600)
+ROM_START(tpad600)
 	ROM_REGION( 0x80000, "pci:07.0", 0 )
 	ROM_LOAD( "tms28f004b_18l9949_rev16-i2298m.u76",   0x00000, 0x80000, CRC(00a52b32) SHA1(08db425b8edb3a036f22beb588caa6f050fc8eb2) )
 
@@ -345,7 +344,7 @@ ROM_START(thinkpad600)
 	ROM_LOAD( "atf1500al-modemboard.u12",              0x00000, 0x00c39, CRC(7ecd4b79) SHA1(b69ef5fe227b466f331f863ba20efd7e23056809) ) // On modem PCB
 ROM_END
 
-ROM_START(thinkpad600e)
+ROM_START(tpad600e)
 	ROM_REGION( 0x80000, "bios", 0 )
 	ROM_LOAD( "e28f004b5t80-10l1056_rev15_h0399m.u60", 0x00000, 0x80000, CRC(fba7567b) SHA1(a84e7d4e5740150e78e5002714c9125705f3356a) )
 
@@ -370,7 +369,7 @@ ROM_START(thinkpad600e)
 	ROM_LOAD( "atf1500al-modemboard.u12",              0x00000, 0x00c39, CRC(7ecd4b79) SHA1(b69ef5fe227b466f331f863ba20efd7e23056809) ) // On modem PCB
 ROM_END
 
-ROM_START(thinkpad600x)
+ROM_START(tpad600x)
 	ROM_REGION( 0x80000, "pci:07.0", 0 )
 	ROM_LOAD( "e28f004b5t80_08k3492_rev25_b0800m.u36", 0x00000, 0x80000, CRC(5c64ef91) SHA1(1aa2d68aff96c1ccc6859c5480fcfc5e73ab250d) )
 
@@ -381,7 +380,7 @@ ROM_START(thinkpad600x)
 	ROM_LOAD( "atmel24rf08ct.u79",                     0x00000, 0x00080, NO_DUMP ) // BIOS settings
 ROM_END
 
-ROM_START(thinkpad770z)
+ROM_START(tpad770z)
 	ROM_REGION( 0x80000, "pci:07.0", 0 )
 	ROM_LOAD( "e28f004b5t80-10l1055-rev09-d0999m.u59", 0x00000, 0x80000, CRC(f9f255c5) SHA1(ee209802d08c6498a42e52c5c45ce469dc095ad4) )
 
@@ -400,9 +399,9 @@ ROM_END
 
 } // anonymous namespace
 
-//    YEAR, NAME,          PARENT, COMPAT, MACHINE,      INPUT,       CLASS,             INIT,       COMPANY, FULLNAME,         FLAGS
-COMP( 1995, thinkpad760xd, 0,      0,      thinkpad600,  thinkpad600, thinkpad600_state, empty_init, "IBM",   "ThinkPad 760XD", MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-COMP( 1998, thinkpad600,   0,      0,      thinkpad600,  thinkpad600, thinkpad600_state, empty_init, "IBM",   "ThinkPad 600",   MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-COMP( 1999, thinkpad600e,  0,      0,      thinkpad600e, thinkpad600, thinkpad600_state, empty_init, "IBM",   "ThinkPad 600E",  MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-COMP( 1999, thinkpad600x,  0,      0,      thinkpad600,  thinkpad600, thinkpad600_state, empty_init, "IBM",   "ThinkPad 600X",  MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-COMP( 1999, thinkpad770z,  0,      0,      thinkpad600,  thinkpad600, thinkpad600_state, empty_init, "IBM",   "ThinkPad 770Z",  MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+//    YEAR, NAME,      PARENT, COMPAT, MACHINE,      INPUT,       CLASS,             INIT,       COMPANY, FULLNAME,         FLAGS
+COMP( 1995, tpad760xd, 0,      0,      thinkpad600,  0, thinkpad600_state, empty_init, "IBM",   "ThinkPad 760XD", MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+COMP( 1998, tpad600,   0,      0,      thinkpad600,  0, thinkpad600_state, empty_init, "IBM",   "ThinkPad 600",   MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+COMP( 1999, tpad600e,  0,      0,      thinkpad600e, 0, thinkpad600_state, empty_init, "IBM",   "ThinkPad 600E",  MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+COMP( 1999, tpad600x,  0,      0,      thinkpad600,  0, thinkpad600_state, empty_init, "IBM",   "ThinkPad 600X",  MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+COMP( 1999, tpad770z,  0,      0,      thinkpad600,  0, thinkpad600_state, empty_init, "IBM",   "ThinkPad 770Z",  MACHINE_NOT_WORKING | MACHINE_NO_SOUND )

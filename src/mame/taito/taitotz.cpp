@@ -89,7 +89,7 @@ E74-06.IC2 is the TMP95C063 program code.
 
 
 
-Rizing Ping Pong
+Raizin Ping Pong
 Taito 2002
 
 This game runs on Taito Type Zero hardware.
@@ -181,6 +181,8 @@ Notes:
 #include "video/poly.h"
 
 #include "screen.h"
+
+#include "corefloat.h"
 
 #include <algorithm>
 
@@ -620,8 +622,8 @@ private:
 	u32 video_reg_r(u32 reg);
 	void video_reg_w(u32 reg, u32 data);
 
-	u16 tlcs_ide0_r(offs_t offset, u16 mem_mask = ~0);
-	u16 tlcs_ide1_r(offs_t offset, u16 mem_mask = ~0);
+	u16 tlcs_ide0_r(offs_t offset);
+	u16 tlcs_ide1_r(offs_t offset);
 	u8 tlcs_common_r(offs_t offset);
 	void tlcs_common_w(offs_t offset, u8 data);
 	u8 tlcs_rtc_r(offs_t offset);
@@ -2167,9 +2169,9 @@ void taitotz_state::tlcs_rtc_w(offs_t offset, u8 data)
 	}
 }
 
-u16 taitotz_state::tlcs_ide0_r(offs_t offset, u16 mem_mask)
+u16 taitotz_state::tlcs_ide0_r(offs_t offset)
 {
-	u16 d = m_ata->cs0_r(offset, mem_mask);
+	u16 d = m_ata->cs0_r(offset);
 	if (offset == 7)
 	{
 		// Type Zero doesn't like the index bit. It's defined as vendor-specific, so it probably shouldn't be up.
@@ -2179,9 +2181,9 @@ u16 taitotz_state::tlcs_ide0_r(offs_t offset, u16 mem_mask)
 	return d;
 }
 
-u16 taitotz_state::tlcs_ide1_r(offs_t offset, u16 mem_mask)
+u16 taitotz_state::tlcs_ide1_r(offs_t offset)
 {
-	u16 d = m_ata->cs1_r(offset, mem_mask);
+	u16 d = m_ata->cs1_r(offset);
 	if (offset == 6)
 	{
 		// Type Zero doesn't like the index bit. It's defined as vendor-specific, so it probably shouldn't be up.
@@ -2640,7 +2642,7 @@ void taitotz_state::taitotz(machine_config &config)
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_refresh_hz(60);
 	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0));
 	m_screen->set_size(512, 384);
@@ -3013,8 +3015,8 @@ ROM_END
 
 GAME( 1999, taitotz,   0,        taitotz,  taitotz,  taitotz_state, empty_init,    ROT0, "Taito", "Type Zero BIOS", MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_IS_BIOS_ROOT )
 GAME( 1999, batlgear,  taitotz,  taitotz,  batlgr2,  taitotz_state, init_batlgear, ROT0, "Taito", "Battle Gear (VER.2.40A)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND | MACHINE_NODEVICE_LAN )
-GAME( 1999, landhigh,  taitotz,  landhigh, landhigh, taitotz_state, init_landhigh, ROT0, "Taito", "Landing High Japan (VER.2.01OK, no sub monitor)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND ) // pitch/roll indicator on main screen
-GAME( 1999, landhigha, landhigh, landhigh, landhigh, taitotz_state, init_landhigha,ROT0, "Taito", "Landing High Japan (VER.2.02O)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND ) // pitch/roll indicator on sub monitor, requires sub monitor-compatible board
+GAME( 1999, landhigh,  taitotz,  landhigh, landhigh, taitotz_state, init_landhigh, ROT0, "Taito", "Landing High Japan (VER.2.01OK, single monitor)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+GAME( 1999, landhigha, landhigh, landhigh, landhigh, taitotz_state, init_landhigha,ROT0, "Taito", "Landing High Japan (VER.2.02O)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND ) // instruments on sub monitor, requires sub monitor-compatible board
 GAME( 1999, pwrshovl,  taitotz,  taitotz,  pwrshovl, taitotz_state, init_pwrshovl, ROT0, "Taito", "Power Shovel ni Norou!! - Power Shovel Simulator (VER.2.07J)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND ) // 1999/8/5 19:13:35
 GAME( 2000, batlgr2,   taitotz,  taitotz,  batlgr2,  taitotz_state, init_batlgr2,  ROT0, "Taito", "Battle Gear 2 (VER.2.04J)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND | MACHINE_NODEVICE_LAN )
 GAME( 2000, batlgr2a,  batlgr2,  taitotz,  batlgr2,  taitotz_state, init_batlgr2a, ROT0, "Taito", "Battle Gear 2 (VER.2.01J, Side by Side conversion)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND | MACHINE_NODEVICE_LAN ) // "BATTLE GEAR2(S)" on test menu

@@ -46,7 +46,7 @@
     On the ColdFire MCF5206e, the UART modules are essentially just a pair of
     MC68681s with only the A port visible and no counter/timer. The ACR on the
     coldfire uarts shoud be updated to reflect this. Additionally, the
-    Buad Rate Generator prescaler reg should be used to set the buad.
+    Baud Rate Generator prescaler reg should be used to set the baud.
 */
 
 #include "emu.h"
@@ -166,8 +166,8 @@ mc68681_device::mc68681_device(const machine_config &mconfig, const char *tag, d
 }
 
 mcf5206e_uart_device::mcf5206e_uart_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock)
-	: duart_base_device(mconfig, type, tag, owner, clock),
-	m_read_vector(false)
+	: duart_base_device(mconfig, type, tag, owner, clock)
+	, m_read_vector(false)
 {
 }
 
@@ -301,7 +301,7 @@ void mcf5206e_uart_device::device_reset()
 	duart_base_device::device_reset();
 
 	IVR = 0x0f;  /* Interrupt Vector Register */
-	UBG = 0x00;  /* UART Buad Rate Generator Register */
+	UBG = 0x00;  /* UART Baud Rate Generator Register */
 	m_read_vector = false;
 }
 
@@ -314,28 +314,28 @@ void xr68c681_device::device_reset()
 
 void duart_base_device::device_add_mconfig(machine_config &config)
 {
-	DUART_CHANNEL(config, CHANA_TAG, 0);
-	DUART_CHANNEL(config, CHANB_TAG, 0);
+	DUART_CHANNEL(config, CHANA_TAG);
+	DUART_CHANNEL(config, CHANB_TAG);
 }
 
 void sc28c94_device::device_add_mconfig(machine_config &config)
 {
-	DUART_CHANNEL(config, CHANA_TAG, 0);
-	DUART_CHANNEL(config, CHANB_TAG, 0);
-	DUART_CHANNEL(config, CHANC_TAG, 0);
-	DUART_CHANNEL(config, CHAND_TAG, 0);
+	DUART_CHANNEL(config, CHANA_TAG);
+	DUART_CHANNEL(config, CHANB_TAG);
+	DUART_CHANNEL(config, CHANC_TAG);
+	DUART_CHANNEL(config, CHAND_TAG);
 }
 
 void mc68340_duart_device::device_add_mconfig(machine_config &config)
 {
-	DUART_CHANNEL(config, CHANA_TAG, 0);
-	DUART_CHANNEL(config, CHANB_TAG, 0);
+	DUART_CHANNEL(config, CHANA_TAG);
+	DUART_CHANNEL(config, CHANB_TAG);
 }
 
 void mcf5206e_uart_device::device_add_mconfig(machine_config &config)
 {
-	DUART_CHANNEL(config, CHANA_TAG, 0);
-	DUART_CHANNEL(config, CHANB_TAG, 0);
+	DUART_CHANNEL(config, CHANA_TAG);
+	DUART_CHANNEL(config, CHANB_TAG);
 }
 
 void duart_base_device::update_interrupts()
@@ -571,14 +571,10 @@ uint8_t mc68681_device::read(offs_t offset)
 	return r;
 }
 
+// TODO: move me out of here, it's one channel per UART not 2
 uint8_t mcf5206e_uart_device::read(offs_t offset)
 {
-	// The ColdFire has the registers aligned to 32-bits address values, despite being 8-bit registers
-	// Also has a slightly different mapping
 	uint8_t r = 0xff;
-
-	offset /= 4;
-	offset &= 0xf;
 
 	switch (offset)
 	{
@@ -591,11 +587,11 @@ uint8_t mcf5206e_uart_device::read(offs_t offset)
 		r = duart_base_device::read(offset);
 		break;
 
-	case 0x06: /* UBG Buad Generator Prescale MSB */
+	case 0x06: /* UBG Baud Generator Prescale MSB */
 	LOG("%s: Reading mcf5206e (%s) reg %x (%s)\n", this->machine().describe_context(), tag(), offset, mcf5206e_duart_reg_read_names[offset]);
 		r = (UBG & 0xFF00) >> 8;
 		break;
-	case 0x07: /* UBG Buad Generator Prescale LSB */
+	case 0x07: /* UBG Baud Generator Prescale LSB */
 	LOG("%s: Reading mcf5206e (%s) reg %x (%s)\n", this->machine().describe_context(), tag(), offset, mcf5206e_duart_reg_read_names[offset]);
 		r = (UBG & 0x00FF);
 		break;
@@ -783,22 +779,24 @@ void mc68681_device::write(offs_t offset, uint8_t data)
 
 void mcf5206e_uart_device::write(offs_t offset, uint8_t data)
 {
-	// The ColdFire has the registers aligned to 32-bits address values, despite being 8-bit registers
-	// Also has a slightly different mapping
-
-	offset /= 4;
-	offset &= 0x0f;
 	switch (offset)
 	{
 	case 0x00: /* UMR */
 	case 0x01: /* UCSR */
-	case 0x02: /* UCR */
 	case 0x03: /* UTB */
 	case 0x04: /* ACR */    // <-- TODO: This needs changing as ACR on ColdFire only handles interrupt enable for CTS
 	case 0x05: /* IMR */
 	case 0x0e: /* Set Output Port (RTS) Bit */
 	case 0x0f: /* Reset Output Port (RTS) Bit */
 		duart_base_device::write(offset, data);
+		break;
+
+	case 0x02: /* UCR */
+		// monomach uses 0x02 0x03 0x01 0x08 0x0c 0x04 at POST
+		// 3 and c are "Do Not Use" according to datasheet
+		// (already a good reason about not deriving from here ...)
+		if (data != 0xc && data != 0x3)
+			duart_base_device::write(offset, data);
 		break;
 
 	case 0x06: /* UBG1 */
@@ -1382,7 +1380,7 @@ void duart_channel::rcv_complete()
 
 	//printf("%s ch %d rcv complete\n", tag(), m_ch);
 
-	if (rx_enabled)
+	if (rx_enabled || (MR2 & 0xc0) == 0x80)
 	{
 		uint8_t errors = 0;
 		if (is_receive_framing_error())
@@ -1430,14 +1428,25 @@ void duart_channel::rx_fifo_push(uint8_t data, uint8_t errors)
 
 void duart_channel::tra_complete()
 {
-	if (!(SR & STATUS_TRANSMITTER_READY))
+	// The transmit shift register has just emptied.  If another character is
+	// waiting in the THR, transfer it to the shift register and assert TxRDY:
+	// per the datasheet the THR->shift transfer is where the TxRDY conditions
+	// are re-asserted, providing "one full character time of buffering".  If the
+	// THR is empty the transmitter is now idle, so set TxEMT (TxRDY is already
+	// set from the previous transfer).
+	//
+	// Asserting TxRDY here, at the transfer -- rather than in the idle branch --
+	// both prevents the transmitter from deadlocking when TxRDY would otherwise
+	// fail to re-assert on a CPU-write / final-bit-time race, and preserves the
+	// one-character buffering window that firmware polling or pipelining on TxRDY
+	// relies on.
+	if (m_tx_data_in_buffer)
 	{
-		if (m_tx_data_in_buffer)
-		{
-			transmit_register_setup(m_tx_data);
-			m_bits_transmitted = 0;
-			m_tx_data_in_buffer = false;
-		}
+		transmit_register_setup(m_tx_data);
+		m_bits_transmitted = 0;
+		m_tx_data_in_buffer = false;
+		SR |= STATUS_TRANSMITTER_READY;
+		update_interrupts();
 	}
 	else
 	{

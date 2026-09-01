@@ -181,15 +181,15 @@ static const int layer_colorbase[] = { 768 / 16, 0 / 16, 256 / 16 };
 
 K052109_CB_MEMBER(thunderx_state_base::tile_callback)
 {
-	*code |= ((*color & 0x1f) << 8) | (bank << 13);
-	*color = layer_colorbase[layer] + ((*color & 0xe0) >> 5);
+	code |= ((color & 0x1f) << 8) | (bank << 13);
+	color = layer_colorbase[layer] + ((color & 0xe0) >> 5);
 }
 
 K052109_CB_MEMBER(scontra_state::gbusters_tile_callback)
 {
 	/* (color & 0x02) is flip y handled internally by the 052109 */
-	*code |= ((*color & 0x0d) << 8) | ((*color & 0x10) << 5) | (bank << 12);
-	*color = layer_colorbase[layer] + ((*color & 0xe0) >> 5);
+	code |= ((color & 0x0d) << 8) | ((color & 0x10) << 5) | (bank << 12);
+	color = layer_colorbase[layer] + ((color & 0xe0) >> 5);
 }
 
 
@@ -206,15 +206,15 @@ K051960_CB_MEMBER(thunderx_state_base::sprite_callback)
 	/* Sprite priority 1 means appear behind background, used only to mask sprites */
 	/* in the foreground */
 	/* Sprite priority 3 means don't draw (not used) */
-	switch (*color & 0x30)
+	switch (color & 0x30)
 	{
-		case 0x00: *priority = 0; break;
-		case 0x10: *priority = GFX_PMASK_2 | GFX_PMASK_1; break;
-		case 0x20: *priority = GFX_PMASK_2; break;
-		case 0x30: *priority = 0xffff; break;
+		case 0x00: priority = 0; break;
+		case 0x10: priority = GFX_PMASK_2 | GFX_PMASK_1; break;
+		case 0x20: priority = GFX_PMASK_2; break;
+		case 0x30: priority = 0xffff; break;
 	}
 
-	*color = sprite_colorbase + (*color & 0x0f);
+	color = sprite_colorbase + (color & 0x0f);
 }
 
 
@@ -515,7 +515,7 @@ void scontra_state::gbusters_videobank_w(uint8_t data)
 
 void thunderx_state_base::sh_irqtrigger_w(uint8_t data)
 {
-	m_audiocpu->set_input_line_and_vector(0, HOLD_LINE, 0xff); // Z80
+	m_audiocpu->set_input_line(0, HOLD_LINE); // Z80 IM1
 }
 
 void scontra_state::k007232_bankswitch_w(uint8_t data)
@@ -806,7 +806,7 @@ void thunderx_state_base::common(machine_config &config)
 	WATCHDOG_TIMER(config, "watchdog");
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(24_MHz_XTAL / 4, 384, 0, 320, 264, 16, 240); // verified on scontra and thunderx PCBs
 	screen.set_screen_update(FUNC(thunderx_state_base::screen_update));
 	screen.set_palette(m_palette);

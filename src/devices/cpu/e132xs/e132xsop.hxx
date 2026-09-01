@@ -1265,11 +1265,7 @@ void hyperstone_device::hyperstone_sardi()
 	{
 		SR |= (val >> (n - 1)) & 1;
 
-		const uint64_t sign_bit = val >> 63;
-		val >>= n;
-
-		if (sign_bit)
-			val |= 0xffffffff00000000U << (32 - n);
+		val = int64_t(val) >> n;
 	}
 
 	if (val == 0)
@@ -1307,11 +1303,7 @@ void hyperstone_device::hyperstone_sard()
 	{
 		SR |= (val >> (n - 1)) & 1;
 
-		const uint64_t sign_bit = val >> 63;
-		val >>= n;
-
-		if (sign_bit)
-			val |= 0xffffffff00000000L << (32 - n);
+		val = int64_t(val) >> n;
 	}
 
 	if (val == 0)
@@ -1337,14 +1329,9 @@ void hyperstone_device::hyperstone_sar()
 
 	if (n)
 	{
-		const uint32_t sign_bit = ret & 0x80000000;
-
 		SR |= (ret >> (n - 1)) & 1;
 
-		ret >>= n;
-
-		if (sign_bit)
-			ret |= 0xffffffff << (32 - n);
+		ret = int32_t(ret) >> n;
 	}
 
 	if (ret == 0)
@@ -1472,7 +1459,7 @@ void hyperstone_device::hyperstone_testlz()
 
 	const uint32_t fp = GET_FP;
 	const uint32_t sreg = m_core->local_regs[(SRC_CODE + fp) & 0x3f];
-	const uint32_t zeros = count_leading_zeros_32(sreg);
+	const uint32_t zeros = std::countl_zero(sreg);
 
 	m_core->local_regs[(DST_CODE + fp) & 0x3f] = zeros;
 
@@ -1493,7 +1480,7 @@ void hyperstone_device::hyperstone_rol()
 
 	uint32_t val = m_core->local_regs[dst_code];
 
-	val = rotl_32(val, n);
+	val = std::rotl(val, n);
 
 	SR &= ~(V_MASK | Z_MASK | C_MASK | N_MASK);
 	if (!(val & 0x80000000) ? (val & mask) : ((val & mask) ^ mask))
@@ -2063,14 +2050,9 @@ void hyperstone_device::hyperstone_sari()
 
 	if (HiN || n)
 	{
-		const uint32_t sign_bit = val & 0x80000000;
-
 		SR |= (val >> (n - 1)) & 1;
 
-		val >>= n;
-
-		if (sign_bit)
-			val |= 0xffffffff << (32 - n);
+		val = int32_t(val) >> n;
 	}
 
 	if (val == 0)

@@ -33,11 +33,11 @@ def load_opcodes(fname):
             # append instruction to last opcode
             if line == '\tprefetch();':
                 opcodes[-1][1].append("\tprefetch_start();")
-                opcodes[-1][1].append("\tIR = mintf->read_sync(PC);")
+                opcodes[-1][1].append("\tm_IR = read_sync(m_PC);")
                 opcodes[-1][1].append("\tprefetch_end();")
             elif line == '\tprefetch_noirq();':
                 opcodes[-1][1].append("\tprefetch_start();")
-                opcodes[-1][1].append("\tIR = mintf->read_sync(PC);")
+                opcodes[-1][1].append("\tm_IR = read_sync(m_PC);")
                 opcodes[-1][1].append("\tprefetch_end_noirq();")
             else:
                 opcodes[-1][1].append(line)
@@ -71,13 +71,16 @@ def emit(f, text):
 
 def identify_line_type(ins):
     if "eat-all-cycles" in ins: return "EAT"
-    for s in ["read", "write"]:
-        if s in ins:
-            return "MEMORY"
+    if "read" in ins: return "MEMORY_READ"
+    if "write" in ins: return "MEMORY_WRITE"
     return "NONE"
 
 
+RDY_GATED_DEVICES = {"m6502", "m6510"}
+
+
 def save_opcodes(f, device, opcodes):
+    rdy_gated = device in RDY_GATED_DEVICES
     for name, instructions in opcodes:
         emit(f, "void %s_device::%s_full()" % (device, name))
         emit(f, "{")
@@ -86,19 +89,27 @@ def save_opcodes(f, device, opcodes):
             line_type = identify_line_type(ins)
             if line_type == "EAT":
                 emit(f, "\tdebugger_wait_hook();")
-                emit(f, "\ticount = 0;")
-                emit(f, "\tinst_substate = %d;" % substate)
+                emit(f, "\tm_icount = 0;")
+                emit(f, "\tm_inst_substate = %d;" % substate)
                 emit(f, "\treturn;")
                 substate += 1
-            elif line_type == "MEMORY":
+            elif line_type in ("MEMORY_READ", "MEMORY_WRITE"):
+                if rdy_gated and line_type == "MEMORY_READ":
+                    emit(f, "\twhile(!m_rdy_state) {")
+                    emit(f, "\t\tm_icount--;")
+                    emit(f, "\t\tif(m_icount <= 0) {")
+                    emit(f, "\t\t\tm_inst_substate = %d;" % substate)
+                    emit(f, "\t\t\treturn;")
+                    emit(f, "\t\t}")
+                    emit(f, "\t}")
                 emit(f, ins)
-                emit(f, "\ticount--;")
-                emit(f, "\tif(icount <= 0) {")
+                emit(f, "\tm_icount--;")
+                emit(f, "\tif(m_icount <= 0) {")
                 emit(f, "\t\tif(access_to_be_redone()) {")
-                emit(f, "\t\t\ticount++;")
-                emit(f, "\t\t\tinst_substate = %d;" % substate)
+                emit(f, "\t\t\tm_icount++;")
+                emit(f, "\t\t\tm_inst_substate = %d;" % substate)
                 emit(f, "\t\t} else")
-                emit(f, "\t\t\tinst_substate = %d;" % (substate+1))
+                emit(f, "\t\t\tm_inst_substate = %d;" % (substate+1))
                 emit(f, "\t\treturn;")
                 emit(f, "\t}")
                 substate += 2
@@ -109,29 +120,37 @@ def save_opcodes(f, device, opcodes):
 
         emit(f, "void %s_device::%s_partial()" % (device, name))
         emit(f, "{")
-        emit(f, "\tswitch(inst_substate) {")
+        emit(f, "\tswitch(m_inst_substate) {")
         emit(f, "case 0:")
         substate = 1
         for ins in instructions:
             line_type = identify_line_type(ins)
             if line_type == "EAT":
                 emit(f, "\tdebugger_wait_hook();")
-                emit(f, "\ticount = 0;")
-                emit(f, "\tinst_substate = %d;" % substate)
+                emit(f, "\tm_icount = 0;")
+                emit(f, "\tm_inst_substate = %d;" % substate)
                 emit(f, "\treturn;")
                 emit(f, "\tcase %d:;" % substate)
                 substate += 1
-            elif line_type == "MEMORY":
+            elif line_type in ("MEMORY_READ", "MEMORY_WRITE"):
                 emit(f, "\t[[fallthrough]];")
                 emit(f, "case %d:" % substate)
+                if rdy_gated and line_type == "MEMORY_READ":
+                    emit(f, "\twhile(!m_rdy_state) {")
+                    emit(f, "\t\tm_icount--;")
+                    emit(f, "\t\tif(m_icount <= 0) {")
+                    emit(f, "\t\t\tm_inst_substate = %d;" % substate)
+                    emit(f, "\t\t\treturn;")
+                    emit(f, "\t\t}")
+                    emit(f, "\t}")
                 emit(f, ins)
-                emit(f, "\ticount--;")
-                emit(f, "\tif(icount <= 0) {")
+                emit(f, "\tm_icount--;")
+                emit(f, "\tif(m_icount <= 0) {")
                 emit(f, "\t\tif(access_to_be_redone()) {")
-                emit(f, "\t\t\ticount++;")
-                emit(f, "\t\t\tinst_substate = %d;" % substate)
+                emit(f, "\t\t\tm_icount++;")
+                emit(f, "\t\t\tm_inst_substate = %d;" % substate)
                 emit(f, "\t\t} else")
-                emit(f, "\t\t\tinst_substate = %d;" % (substate+1))
+                emit(f, "\t\t\tm_inst_substate = %d;" % (substate+1))
                 emit(f, "\t\treturn;")
                 emit(f, "\t}")
                 emit(f, "\t[[fallthrough]];")
@@ -141,7 +160,7 @@ def save_opcodes(f, device, opcodes):
                 emit(f, ins)
         emit(f, "\tbreak;")
         emit(f, "}")
-        emit(f, "\tinst_substate = 0;")
+        emit(f, "\tm_inst_substate = 0;")
         emit(f, "}")
         emit(f, "")
 
@@ -149,7 +168,7 @@ def save_opcodes(f, device, opcodes):
 DO_EXEC_FULL_PROLOG="""\
 void %(device)s_device::do_exec_full()
 {
-\tswitch(inst_state) {
+\tswitch(m_inst_state) {
 """
 
 DO_EXEC_FULL_EPILOG="""\
@@ -160,7 +179,7 @@ DO_EXEC_FULL_EPILOG="""\
 DO_EXEC_PARTIAL_PROLOG="""\
 void %(device)s_device::do_exec_partial()
 {
-\tswitch(inst_state) {
+\tswitch(m_inst_state) {
 """
 
 DO_EXEC_PARTIAL_EPILOG="""\
@@ -216,9 +235,9 @@ def save_dasm(f, device, states):
         opc = tokens[0]
         mode = tokens[-1]
         extra = "0"
-        if opc in ["jsr", "bsr", "callf", "jpi", "jsb"]:
+        if opc in ["jsr", "bsr", "callf", "jpi", "jsb", "jsl"]:
             extra = "STEP_OVER"
-        elif opc in ["rts", "rti", "rtn", "retf", "tpi"]:
+        elif opc in ["rts", "rti", "rtn", "retf", "tpi", "rtl"]:
             extra = "STEP_OUT"
         elif opc in ["bcc", "bcs", "beq", "bmi", "bne", "bpl", "bvc", "bvs", "bbr", "bbs", "bbc", "bar", "bas"]:
             extra = "STEP_COND"
@@ -292,4 +311,3 @@ def main(argv):
 # ======================================================================
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
-

@@ -106,8 +106,8 @@ private:
 
 K052109_CB_MEMBER(bottom9_state::tile_callback)
 {
-	*code |= (*color & 0x3f) << 8;
-	*color = m_layer_colorbase[layer] + ((*color & 0xc0) >> 6);
+	code |= (color & 0x3f) << 8;
+	color = m_layer_colorbase[layer] + ((color & 0xc0) >> 6);
 }
 
 
@@ -123,11 +123,11 @@ K051960_CB_MEMBER(bottom9_state::sprite_callback)
 
 	// bit 4 = priority over zoom (0 = have priority)
 	// bit 5 = priority over B (1 = have priority)
-	*priority = GFX_PMASK_4;
-	if ( *color & 0x10) *priority |= GFX_PMASK_1;
-	if (~*color & 0x20) *priority |= GFX_PMASK_2;
+	priority = GFX_PMASK_4;
+	if ( color & 0x10) priority |= GFX_PMASK_1;
+	if (~color & 0x20) priority |= GFX_PMASK_2;
 
-	*color = sprite_colorbase + (*color & 0x0f);
+	color = sprite_colorbase + (color & 0x0f);
 }
 
 
@@ -141,8 +141,8 @@ K051316_CB_MEMBER(bottom9_state::zoom_callback)
 {
 	enum { zoom_colorbase = 768 / 16 };
 
-	*code |= ((*color & 0x03) << 8);
-	*color = zoom_colorbase + ((*color & 0x3c) >> 2);
+	code |= ((color & 0x03) << 8);
+	color = zoom_colorbase + ((color & 0x3c) >> 2);
 }
 
 
@@ -420,7 +420,7 @@ void bottom9_state::bottom9(machine_config &config)
 	WATCHDOG_TIMER(config, "watchdog");
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(24_MHz_XTAL / 4, 384, 0+16, 320-16, 264, 16, 240);
 	screen.set_screen_update(FUNC(bottom9_state::screen_update));
 	screen.set_palette(m_palette);

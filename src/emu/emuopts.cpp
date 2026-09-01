@@ -122,6 +122,7 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_ARTWORK_CROP ";artcrop",                    "0",         core_options::option_type::BOOLEAN,    "crop artwork so emulated screen image fills output screen/window in one axis" },
 	{ OPTION_FALLBACK_ARTWORK,                           nullptr,     core_options::option_type::STRING,     "fallback artwork if no external artwork or internal driver layout defined" },
 	{ OPTION_OVERRIDE_ARTWORK,                           nullptr,     core_options::option_type::STRING,     "override artwork for external artwork and internal driver layout" },
+	{ OPTION_ARTWORK_FONT ";artfont",                    "default",   core_options::option_type::STRING,     "specify a font to use for artwork text elements" },
 
 	// screen options
 	{ nullptr,                                           nullptr,     core_options::option_type::HEADER,     "CORE SCREEN OPTIONS" },
@@ -156,7 +157,6 @@ const options_entry emu_options::s_option_entries[] =
 	{ OPTION_MULTIMOUSE,                                 "0",         core_options::option_type::BOOLEAN,    "enable separate input from each mouse device (if present)" },
 	{ OPTION_STEADYKEY ";steady",                        "0",         core_options::option_type::BOOLEAN,    "enable steadykey support" },
 	{ OPTION_UI_ACTIVE,                                  "0",         core_options::option_type::BOOLEAN,    "enable user interface on top of emulated keyboard (if present)" },
-	{ OPTION_OFFSCREEN_RELOAD ";reload",                 "0",         core_options::option_type::BOOLEAN,    "convert lightgun button 2 into offscreen reload" },
 	{ OPTION_JOYSTICK_MAP ";joymap",                     "auto",      core_options::option_type::STRING,     "explicit joystick map, or auto to auto-select" },
 	{ OPTION_JOYSTICK_DEADZONE ";joy_deadzone;jdz(0.00-1)",       "0.15", core_options::option_type::FLOAT,  "center deadzone range for joystick where change is ignored (0.0 center, 1.0 end)" },
 	{ OPTION_JOYSTICK_SATURATION ";joy_saturation;jsat(0.00-1)",  "0.85", core_options::option_type::FLOAT,  "end of axis saturation range for joystick where change is ignored (0.0 center, 1.0 end)" },
@@ -196,20 +196,21 @@ const options_entry emu_options::s_option_entries[] =
 
 	// misc options
 	{ nullptr,                                           nullptr,     core_options::option_type::HEADER,     "CORE MISC OPTIONS" },
-	{ OPTION_DRC,                                        "1",         core_options::option_type::BOOLEAN,    "enable DRC CPU core if available" },
+	{ OPTION_DRC,                                        "1",         core_options::option_type::BOOLEAN,    "enable DRC CPU cores if available" },
+	{ OPTION_DRC_RWX,                                    "1",         core_options::option_type::BOOLEAN,    "allow DRC to use writable executable pages if supported" },
 	{ OPTION_DRC_USE_C,                                  "0",         core_options::option_type::BOOLEAN,    "force DRC to use C backend" },
 	{ OPTION_DRC_LOG_UML,                                "0",         core_options::option_type::BOOLEAN,    "write DRC UML disassembly log" },
 	{ OPTION_DRC_LOG_NATIVE,                             "0",         core_options::option_type::BOOLEAN,    "write DRC native disassembly log" },
 	{ OPTION_BIOS,                                       nullptr,     core_options::option_type::STRING,     "select the system BIOS to use" },
 	{ OPTION_CHEAT ";c",                                 "0",         core_options::option_type::BOOLEAN,    "enable cheat subsystem" },
 	{ OPTION_SKIP_GAMEINFO,                              "0",         core_options::option_type::BOOLEAN,    "skip displaying the system information screen at startup" },
-	{ OPTION_UI_FONT,                                    "default",   core_options::option_type::STRING,     "specify a font to use" },
+	{ OPTION_UI_FONT,                                    "default",   core_options::option_type::STRING,     "specify a font to use for UI text" },
 	{ OPTION_UI,                                         "cabinet",   core_options::option_type::STRING,     "type of UI (simple|cabinet)" },
-	{ OPTION_RAMSIZE ";ram",                             nullptr,     core_options::option_type::STRING,     "size of RAM (if supported by driver)" },
 	{ OPTION_CONFIRM_QUIT,                               "0",         core_options::option_type::BOOLEAN,    "ask for confirmation before exiting" },
 	{ OPTION_UI_MOUSE,                                   "1",         core_options::option_type::BOOLEAN,    "display UI mouse cursor" },
 	{ OPTION_LANGUAGE ";lang",                           "",          core_options::option_type::STRING,     "set UI display language" },
 	{ OPTION_NVRAM_SAVE ";nvwrite",                      "1",         core_options::option_type::BOOLEAN,    "save NVRAM data on exit" },
+	{ OPTION_RTC_TIME,                                   nullptr,     core_options::option_type::STRING,     "start emulation with time" },
 
 	{ nullptr,                                           nullptr,     core_options::option_type::HEADER,     "SCRIPTING OPTIONS" },
 	{ OPTION_AUTOBOOT_COMMAND ";ab",                     nullptr,     core_options::option_type::STRING,     "command to execute after machine boot" },
@@ -290,8 +291,8 @@ namespace
 	class slot_option_entry : public core_options::entry
 	{
 	public:
-		slot_option_entry(const char *name, slot_option &host)
-			: entry(name)
+		slot_option_entry(std::string &&name, slot_option &host)
+			: entry(std::move(name))
 			, m_host(host)
 		{
 		}
@@ -356,7 +357,7 @@ namespace
 	class existing_option_tracker
 	{
 	public:
-		existing_option_tracker(const std::unordered_map<std::string, T> &map)
+		existing_option_tracker(const util::transparent_string_unordered_map<std::string, T> &map)
 		{
 			m_vec.reserve(map.size());
 			for (const auto &entry : map)
@@ -565,7 +566,7 @@ bool emu_options::add_and_remove_slot_options()
 		for (const device_slot_interface &slot : slot_interface_enumerator(config.root_device()))
 		{
 			// come up with the canonical name of the slot
-			const char *slot_option_name = slot.slot_name();
+			const std::string_view slot_option_name = slot.slot_name();
 
 			// erase this option from existing (so we don't purge it later)
 			existing.remove(slot_option_name);
@@ -587,7 +588,7 @@ bool emu_options::add_and_remove_slot_options()
 						add_header(header);
 
 					// create a new entry in the options
-					auto new_entry = new_option.setup_option_entry(slot_option_name);
+					auto new_entry = new_option.setup_option_entry(std::string(slot_option_name));
 
 					// and add it
 					add_entry(std::move(new_entry), header);
@@ -765,7 +766,7 @@ void emu_options::reevaluate_default_card_software()
 				// values representing cartridge types and such
 				if (default_card_software.empty())
 				{
-					auto *opt = slot.option(slot_opt.default_card_software().c_str());
+					auto *opt = slot.option(slot_opt.default_card_software());
 					if (opt && opt->selectable())
 						continue;
 				}
@@ -790,7 +791,7 @@ void emu_options::reevaluate_default_card_software()
 std::string emu_options::get_default_card_software(device_slot_interface &slot)
 {
 	std::string image_path;
-	std::function<bool(util::core_file &, std::string&)> get_hashfile_extrainfo;
+	std::function<bool (util::random_read &, std::string&)> get_hashfile_extrainfo;
 
 	// figure out if an image option has been specified, and if so, get the image path out of the options
 	device_image_interface *image = dynamic_cast<device_image_interface *>(&slot);
@@ -798,16 +799,17 @@ std::string emu_options::get_default_card_software(device_slot_interface &slot)
 	{
 		image_path = image_option(image->instance_name()).value();
 
-		get_hashfile_extrainfo = [image, this](util::core_file &file, std::string &extrainfo)
-		{
-			util::hash_collection hashes = image->calculate_hash_on_file(file);
+		get_hashfile_extrainfo =
+				[image, this] (util::random_read &file, std::string &extrainfo)
+				{
+					util::hash_collection hashes = image->calculate_hash_on_file(file);
 
-			return hashfile_extrainfo(
-					hash_path(),
-					image->device().mconfig().gamedrv(),
-					hashes,
-					extrainfo);
-		};
+					return hashfile_extrainfo(
+							hash_path(),
+							image->device().mconfig().gamedrv(),
+							hashes,
+							extrainfo);
+				};
 	}
 
 	// create the hook
@@ -984,11 +986,11 @@ emu_options::software_options emu_options::evaluate_initial_softlist_options(con
 								std::string slot_name = fi.name().substr(0, fi.name().size() - default_suffix.size());
 
 								// only add defaults if they exist in this configuration
-								device_t *device = config.root_device().subdevice(slot_name.c_str());
+								device_t *device = config.root_device().subdevice(slot_name);
 								if (device)
 								{
 									device_slot_interface *intf;
-									if (device->interface(intf) && intf->option(fi.value().c_str()))
+									if (device->interface(intf) && intf->option(fi.value()))
 										results.slot_defaults[slot_name] = fi.value();
 								}
 							}
@@ -1024,16 +1026,16 @@ emu_options::software_options emu_options::evaluate_initial_softlist_options(con
 //  find_slot_option
 //-------------------------------------------------
 
-const slot_option *emu_options::find_slot_option(const std::string &device_name) const
+const slot_option *emu_options::find_slot_option(std::string_view device_name) const
 {
-	auto iter = m_slot_options.find(device_name);
-	return iter != m_slot_options.end() ? &iter->second : nullptr;
+	auto const iter = m_slot_options.find(device_name);
+	return (iter != m_slot_options.end()) ? &iter->second : nullptr;
 }
 
-slot_option *emu_options::find_slot_option(const std::string &device_name)
+slot_option *emu_options::find_slot_option(std::string_view device_name)
 {
-	auto iter = m_slot_options.find(device_name);
-	return iter != m_slot_options.end() ? &iter->second : nullptr;
+	auto const iter = m_slot_options.find(device_name);
+	return (iter != m_slot_options.end()) ? &iter->second : nullptr;
 }
 
 
@@ -1042,16 +1044,16 @@ slot_option *emu_options::find_slot_option(const std::string &device_name)
 //  slot_option
 //-------------------------------------------------
 
-const slot_option &emu_options::slot_option(const std::string &device_name) const
+const slot_option &emu_options::slot_option(std::string_view device_name) const
 {
-	const ::slot_option *opt = find_slot_option(device_name);
+	::slot_option const *const opt = find_slot_option(device_name);
 	assert(opt && "Attempt to access non-existent slot option");
 	return *opt;
 }
 
-slot_option &emu_options::slot_option(const std::string &device_name)
+slot_option &emu_options::slot_option(std::string_view device_name)
 {
-	::slot_option *opt = find_slot_option(device_name);
+	::slot_option *const opt = find_slot_option(device_name);
 	assert(opt && "Attempt to access non-existent slot option");
 	return *opt;
 }
@@ -1061,16 +1063,16 @@ slot_option &emu_options::slot_option(const std::string &device_name)
 //  image_option
 //-------------------------------------------------
 
-const image_option &emu_options::image_option(const std::string &device_name) const
+const image_option &emu_options::image_option(std::string_view device_name) const
 {
-	auto iter = m_image_options.find(device_name);
+	auto const iter = m_image_options.find(device_name);
 	assert(iter != m_image_options.end() && "Attempt to access non-existent image option");
 	return *iter->second;
 }
 
-image_option &emu_options::image_option(const std::string &device_name)
+image_option &emu_options::image_option(std::string_view device_name)
 {
-	auto iter = m_image_options.find(device_name);
+	auto const iter = m_image_options.find(device_name);
 	assert(iter != m_image_options.end() && "Attempt to access non-existent image option");
 	return *iter->second;
 }
@@ -1265,13 +1267,13 @@ void slot_option::set_bios(std::string &&text)
 //  slot_option::setup_option_entry
 //-------------------------------------------------
 
-core_options::entry::shared_ptr slot_option::setup_option_entry(const char *name)
+core_options::entry::shared_ptr slot_option::setup_option_entry(std::string &&name)
 {
 	// this should only be called once
 	assert(m_entry.expired());
 
 	// create the entry and return it
-	core_options::entry::shared_ptr entry = std::make_shared<slot_option_entry>(name, *this);
+	auto entry = std::make_shared<slot_option_entry>(std::move(name), *this);
 	m_entry = entry;
 	return entry;
 }

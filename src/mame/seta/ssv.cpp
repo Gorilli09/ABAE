@@ -56,7 +56,8 @@ STA-0001B   SSV_SUB     01  Vasara 2                                Visco
 
 (1) Uses ST010 MCU / Math chip
 (2) Uses ST-0009 & ST-0020 & Light Gun
-(3) Uses NEC V810 CPU as sub cpu for the AI (basically the same as the majinsen games on st0016)
+(3) Uses NEC V810 CPU as sub cpu for the AI (basically the same as the mayjinsen games on
+    seta/simple_st0016.cpp)
 
 SSV Hardware Overview
 Sammy/Seta/Visco, 1993-2001
@@ -188,7 +189,7 @@ void ssv_state::update_irq_state()
 	m_maincpu->set_input_line(0, (m_requested_int & m_irq_enable)? ASSERT_LINE : CLEAR_LINE);
 }
 
-IRQ_CALLBACK_MEMBER(ssv_state::irq_callback)
+u8 ssv_state::irq_callback()
 {
 	for (int i = 0; i <= 7; i++)
 	{
@@ -2430,12 +2431,12 @@ void ssv_state::ssv(machine_config &config)
 
 	// basic machine hardware
 	V60(config, m_maincpu, SSV_MASTER_CLOCK); // Based on STA-0001 & STA-0001B System boards
-	m_maincpu->set_irq_acknowledge_callback(FUNC(ssv_state::irq_callback));
+	m_maincpu->irq_cycle_callback().set(FUNC(ssv_state::irq_callback));
 
 	TIMER(config, "scantimer").configure_scanline(FUNC(ssv_state::interrupt), "screen", 0, 1);
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(SSV_PIXEL_CLOCK, SSV_HTOTAL, SSV_HBEND, SSV_HBSTART, SSV_VTOTAL, SSV_VBEND, SSV_VBSTART);
 	m_screen->set_screen_update(FUNC(ssv_state::screen_update));
 	m_screen->set_palette(m_palette);
@@ -2453,8 +2454,8 @@ void ssv_state::ssv(machine_config &config)
 	m_ensoniq->set_region2("ensoniq.2");
 	m_ensoniq->set_region3("ensoniq.3");
 	m_ensoniq->set_channels(1);
-	m_ensoniq->add_route(0, "speaker", 0.075, 0);
-	m_ensoniq->add_route(1, "speaker", 0.075, 1);
+	m_ensoniq->add_route(0, "speaker", 1.2, 0);
+	m_ensoniq->add_route(1, "speaker", 1.2, 1);
 }
 
 void drifto94_state::drifto94(machine_config &config)
@@ -2496,7 +2497,7 @@ void gdfs_state::gdfs(machine_config &config)
 	m_screen->set_visarea(0, (0xd5-0x2c)*2-1, 0, (0x102-0x12)-1);
 	m_screen->set_screen_update(FUNC(gdfs_state::screen_update));
 
-	ST0020_SPRITES(config, m_st0020, 0);
+	ST0020_SPRITES(config, m_st0020);
 	m_st0020->set_palette(m_palette);
 
 	m_gfxdecode->set_info(gfx_gdfs);

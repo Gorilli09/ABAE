@@ -45,10 +45,11 @@ protected:
 	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 	// device_a2bus_card_interface implementation
-	virtual u8 read_c0nx(u8 offset) override { return 0xff; }
+	virtual u8 read_c0nx(u8 offset) override { return get_open_bus(); }
 	virtual void write_c0nx(u8 offset, u8 data) override { }
 	virtual u8 read_cnxx(u8 offset) override;
 	virtual void write_cnxx(u8 offset, u8 data) override;
+	virtual void reset_from_bus() override;
 
 	static void via_psg_ctrl(ay8913_device &psg, u8 &latch, u8 data);
 
@@ -108,6 +109,7 @@ protected:
 	virtual void write_c0nx(u8 offset, u8 data) override;
 	virtual u8 read_cnxx(u8 offset) override;
 	virtual void write_cnxx(u8 offset, u8 data) override;
+	virtual void reset_from_bus() override;
 
 	void via1_out_b(u8 data);
 	void via2_out_b(u8 data);
@@ -266,6 +268,22 @@ void a2bus_ayboard_device::device_start()
 void a2bus_ayboard_device::device_reset()
 {
 	m_porta1 = m_porta2 = 0;
+}
+
+void a2bus_ayboard_device::reset_from_bus()
+{
+	m_via1->reset();
+	if (m_via2.found())
+		m_via2->reset();
+	m_ay1->reset();
+	m_ay2->reset();
+}
+
+void a2bus_phasor_device::reset_from_bus()
+{
+	a2bus_ayboard_device::reset_from_bus();
+	m_ay3->reset();
+	m_ay4->reset();
 }
 
 /*-------------------------------------------------
@@ -550,9 +568,12 @@ void a2bus_phasor_device::set_clocks()
 
 u8 a2bus_phasor_device::read_c0nx(u8 offset)
 {
-	m_native = BIT(offset, 0);
-	set_clocks();
-	return 0xff;
+	if (!machine().side_effects_disabled())
+	{
+		m_native = BIT(offset, 0);
+		set_clocks();
+	}
+	return get_open_bus();
 }
 
 void a2bus_phasor_device::write_c0nx(u8 offset, u8 data)

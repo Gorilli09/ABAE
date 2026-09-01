@@ -88,6 +88,7 @@ private:
 
 	template <uint8_t Which> void draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect, bitmap_ind8 &priority_bitmap);
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
+	template <uint8_t Which> void sprite_callback(int &code, int &color, int colbank);
 
 	template <uint8_t Which> void flipscreen_w(int state) { m_tilemap[Which]->set_flip(state ? (TILEMAP_FLIPY | TILEMAP_FLIPX) : 0); }
 	template <uint8_t Which> void pf_video_w(offs_t offset, uint8_t data);
@@ -196,13 +197,17 @@ void hcastle_state::video_start()
 
 ***************************************************************************/
 
+template <uint8_t Which>
+void hcastle_state::sprite_callback(int &code, int &color, int colbank)
+{
+	color += colbank;
+	code += (Which == 0) ? 0x4000 * (m_gfx_bank & 1) : 0;
+}
+
 template <uint8_t Which> // 0 = FG, 1 = BG
 void hcastle_state::draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect, bitmap_ind8 &priority_bitmap)
 {
-	int base_color = (m_k007121[Which]->ctrl_r(6) & 0x30) * 2;
-	int bank_base = (Which == 0) ? 0x4000 * (m_gfx_bank & 1) : 0;
-
-	m_k007121[Which]->sprites_draw(bitmap, cliprect, base_color, 0, bank_base, priority_bitmap, (uint32_t)-1);
+	m_k007121[Which]->sprites_draw(bitmap, cliprect, priority_bitmap, (uint32_t)-1);
 }
 
 uint32_t hcastle_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect)
@@ -442,19 +447,21 @@ void hcastle_state::hcastle(machine_config &config)
 	WATCHDOG_TIMER(config, "watchdog");
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(24_MHz_XTAL / 4, 384, 0, 256, 264, 16, 240);
 	screen.set_screen_update(FUNC(hcastle_state::screen_update));
 	screen.set_palette(m_palette);
 
 	PALETTE(config, m_palette, FUNC(hcastle_state::palette)).set_format(palette_device::xBGR_555, 2*8*16*16, 128);
 
-	K007121(config, m_k007121[0], 0, gfx_hcastle_1, m_palette, "screen");
+	K007121(config, m_k007121[0], gfx_hcastle_1, m_palette, "screen");
 	m_k007121[0]->set_irq_cb().set_inputline(m_maincpu, KONAMI_IRQ_LINE);
 	m_k007121[0]->set_flipscreen_cb().set(FUNC(hcastle_state::flipscreen_w<0>));
+	m_k007121[0]->set_sprite_callback(FUNC(hcastle_state::sprite_callback<0>));
 
-	K007121(config, m_k007121[1], 0, gfx_hcastle_2, m_palette, "screen");
+	K007121(config, m_k007121[1], gfx_hcastle_2, m_palette, "screen");
 	m_k007121[1]->set_flipscreen_cb().set(FUNC(hcastle_state::flipscreen_w<1>));
+	m_k007121[1]->set_sprite_callback(FUNC(hcastle_state::sprite_callback<1>));
 
 	// sound hardware
 	SPEAKER(config, "mono").front_center();

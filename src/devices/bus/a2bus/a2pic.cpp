@@ -29,6 +29,7 @@ public:
 	virtual void write_c0nx(u8 offset, u8 data) override;
 	virtual u8 read_cnxx(u8 offset) override;
 	virtual void write_cnxx(u8 offset, u8 data) override;
+	virtual void reset_from_bus() override;
 
 protected:
 	// device_t implementation
@@ -217,7 +218,7 @@ u8 a2bus_pic_device::read_c0nx(u8 offset)
 		return 0x97U | (m_perror_in << 5) | (m_select_in << 6) | (m_fault_in << 3);
 
 	case 4U:
-		return (m_ack_latch << 7) | (m_ack_in ^ BIT(m_input_sw1->read(), 4));
+		return (m_ack_latch << 7) | (get_open_bus() & 0x7eU) | (m_ack_in ^ BIT(m_input_sw1->read(), 4));
 
 	case 5U:
 		logerror("500ns negative strobe not implemented\n");
@@ -234,7 +235,7 @@ u8 a2bus_pic_device::read_c0nx(u8 offset)
 		break;
 	}
 
-	return 0x00U;
+	return get_open_bus();
 }
 
 void a2bus_pic_device::write_c0nx(u8 offset, u8 data)
@@ -360,6 +361,12 @@ void a2bus_pic_device::device_start()
 
 
 void a2bus_pic_device::device_reset()
+{
+	reset_from_bus();
+}
+
+
+void a2bus_pic_device::reset_from_bus()
 {
 	ioport_value const sw1(m_input_sw1->read());
 	ioport_value const x(m_input_x->read());

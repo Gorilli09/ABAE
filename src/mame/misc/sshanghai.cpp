@@ -301,7 +301,7 @@ static INPUT_PORTS_START( ssh2000 )
 	PORT_DIPNAME( 0x10, 0x00, "Extra Take")         PORT_DIPLOCATION("DSWA:4")
 	PORT_DIPSETTING(    0x10, "OFF:  NO" )
 	PORT_DIPSETTING(    0x00, "ON:  YES" )
-	PORT_DIPNAME( 0x20, 0x00, "Demo Sound" )        PORT_DIPLOCATION("DSWA:3")
+	PORT_DIPNAME( 0x20, 0x00, DEF_STR( Demo_Sounds ) ) PORT_DIPLOCATION("DSWA:3")  // "Demo Sound"
 	PORT_DIPSETTING(    0x20, "OFF:  NO" )
 	PORT_DIPSETTING(    0x00, "ON:  YES" )
 	PORT_DIPNAME( 0x40, 0x00, "Max. BET" )          PORT_DIPLOCATION("DSWA:2")
@@ -462,7 +462,7 @@ void ssh2000_state::ssh2000(machine_config &config)
 	m_maincpu->set_addrmap(AS_IO, &ssh2000_state::ssh2000_portmap);
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(60);
 	screen.set_size(64*8, 32*8);
 	screen.set_visarea(0*8, 64*8-1, 2*8, 30*8-1);
@@ -681,5 +681,5 @@ void ssh2000_state::init_2001()
 GAME( 2001, ssh2000,   0,       ssh2000, ssh2000,  ssh2000_state, empty_init, ROT0, "bootleg", "Super Shanghai 2000 (set 1, green board)",                    0 )
 GAME( 2000, ssh2000a,  ssh2000, ssh2000, ssh2000a, ssh2000_state, empty_init, ROT0, "bootleg", "Super Shanghai 2000 (set 2, green board)",                    0 )
 GAME( 2000, ssh2000wf, 0,       ssh2000, ssh2000a, ssh2000_state, empty_init, ROT0, "bootleg", "Super Shanghai 2000 - Wrestle Fiesta (30% bonus, red board)", 0 )
-GAME( 2001, ssh2001,   0,       ssh2000, ssh2000,  ssh2000_state, init_2001 , ROT0, "bootleg", "Super Shanghai 2001 (set 1, red board)",                      0 )
+GAME( 2001, ssh2001,   0,       ssh2000, ssh2000,  ssh2000_state, init_2001,  ROT0, "bootleg", "Super Shanghai 2001 (set 1, red board)",                      0 )
 GAME( 2001, ssh2001a,  ssh2001, ssh2000, ssh2000,  ssh2000_state, empty_init, ROT0, "bootleg", "Super Shanghai 2001 (set 2, red board)",                      0 )

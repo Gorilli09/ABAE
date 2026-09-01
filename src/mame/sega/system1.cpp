@@ -304,6 +304,7 @@ seem to have access to.
 #include "machine/segacrpt_device.h"
 #include "cpu/z80/mc8123.h"
 
+#include "sound.h"
 #include "speaker.h"
 
 
@@ -418,8 +419,6 @@ void system1_state::videomode_w(u8 data)
 void shtngmst_state::machine_start()
 {
 	system1_state::machine_start();
-
-	m_gun_solenoid.resolve();
 
 	save_item(NAME(m_gun_output));
 	save_item(NAME(m_gun_trigger));
@@ -570,7 +569,7 @@ void system1_state::mcu_control_w(u8 data)
 {
 	/*
 	    Bit 7 -> connects to TD62003 pins 5 & 6 @ IC151
-	    Bit 6 -> via PLS153, when high, asserts the BUSRQ signal, halting the Z80
+	    Bit 6 -> via PLS153, when high, asserts the BUSREQ signal, halting the Z80
 	    Bit 5 -> n/c
 	    Bit 4 -> (with bit 3) Memory select: 0=Z80 program space, 1=banked ROM, 2=Z80 I/O space, 3=watchdog?
 	    Bit 3 ->
@@ -579,17 +578,17 @@ void system1_state::mcu_control_w(u8 data)
 	    Bit 0 -> Directly connected to Z80 /INT line
 	*/
 
-	// boost interleave to ensure that the MCU can break the Z80 out of BUSRQ
+	// boost interleave to ensure that the MCU can break the Z80 out of BUSREQ
 	if (!BIT(m_mcu_control, 6) && BIT(data, 6))
 		machine().scheduler().perfect_quantum(attotime::from_usec(10));
 
 	m_mcu_control = data;
-	m_maincpu->set_input_line(Z80_INPUT_LINE_BUSRQ, (data & 0x40) ? ASSERT_LINE : CLEAR_LINE);
+	m_maincpu->set_input_line(Z80_INPUT_LINE_BUSREQ, (data & 0x40) ? ASSERT_LINE : CLEAR_LINE);
 	m_maincpu->set_input_line(0, (data & 0x01) ? CLEAR_LINE : ASSERT_LINE);
 }
 
 
-void system1_state::mcu_io_w(offs_t offset, u8 data)
+void system1_state::mcu_data_w(offs_t offset, u8 data)
 {
 	switch ((m_mcu_control >> 3) & 3)
 	{
@@ -609,7 +608,7 @@ void system1_state::mcu_io_w(offs_t offset, u8 data)
 }
 
 
-u8 system1_state::mcu_io_r(offs_t offset)
+u8 system1_state::mcu_data_r(offs_t offset)
 {
 	switch ((m_mcu_control >> 3) & 3)
 	{
@@ -858,9 +857,9 @@ void system1_state::sound_map(address_map &map)
  *
  *************************************/
 
-void system1_state::mcu_io_map(address_map &map)
+void system1_state::mcu_data_map(address_map &map)
 {
-	map(0x0000, 0xffff).rw(FUNC(system1_state::mcu_io_r), FUNC(system1_state::mcu_io_w));
+	map(0x0000, 0xffff).rw(FUNC(system1_state::mcu_data_r), FUNC(system1_state::mcu_data_w));
 }
 
 
@@ -2202,13 +2201,12 @@ void system1_state::sys1ppi(machine_config &config)
 	Z80(config, m_maincpu, MASTER_CLOCK/5);
 	m_maincpu->set_addrmap(AS_PROGRAM, &system1_state::system1_map);
 	m_maincpu->set_addrmap(AS_IO, &system1_state::system1_ppi_io_map);
-	m_maincpu->set_vblank_int("screen", FUNC(system1_state::irq0_line_hold));
 	m_maincpu->refresh_cb().set(FUNC(system1_state::adjust_cycles));
 
 	Z80(config, m_soundcpu, SOUND_CLOCK/2);
 	m_soundcpu->set_addrmap(AS_PROGRAM, &system1_state::sound_map);
 
-	TIMER(config, "soundirq", 0).configure_scanline(FUNC(system1_state::soundirq_gen), "screen", 32, 64);
+	TIMER(config, "soundirq").configure_scanline(FUNC(system1_state::soundirq_gen), "screen", 32, 64);
 
 	config.set_maximum_quantum(attotime::from_hz(6000));
 
@@ -2221,11 +2219,12 @@ void system1_state::sys1ppi(machine_config &config)
 	m_ppi8255->tri_pc_callback().set_constant(0x80);
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_video_attributes(VIDEO_ALWAYS_UPDATE); // needed for proper hardware collisions
 	m_screen->set_raw(MASTER_CLOCK/2, 640, 0, 512, 260, 0, 224);
 	m_screen->set_screen_update(FUNC(system1_state::screen_update_system1));
 	m_screen->set_palette(m_palette);
+	m_screen->screen_vblank().set_inputline(m_maincpu, 0, HOLD_LINE);
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_system1);
 	PALETTE(config, m_palette, FUNC(system1_state::system1_palette)).set_entries(2048, 256);
@@ -2282,10 +2281,8 @@ void system1_state::sys1pios(machine_config &config)
 void system1_state::mcu(machine_config &config)
 {
 	// basic machine hardware
-	m_maincpu->remove_vblank_int();
-
 	I8751(config, m_mcu, SOUND_CLOCK);
-	m_mcu->set_addrmap(AS_IO, &system1_state::mcu_io_map);
+	m_mcu->set_addrmap(AS_DATA, &system1_state::mcu_data_map);
 	m_mcu->port_out_cb<1>().set(FUNC(system1_state::mcu_control_w));
 
 	config.set_maximum_quantum(attotime::from_hz(m_maincpu->clock() / 16));
@@ -2330,7 +2327,6 @@ void system1_state::encrypted_sys1ppi_maps(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &system1_state::system1_map);
 	m_maincpu->set_addrmap(AS_OPCODES, &system1_state::decrypted_opcodes_map);
 	m_maincpu->set_addrmap(AS_IO, &system1_state::system1_ppi_io_map);
-	m_maincpu->set_vblank_int("screen", FUNC(system1_state::irq0_line_hold));
 	m_maincpu->refresh_cb().set(FUNC(system1_state::adjust_cycles));
 }
 
@@ -2339,7 +2335,6 @@ void system1_state::encrypted_sys1pio_maps(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &system1_state::system1_map);
 	m_maincpu->set_addrmap(AS_OPCODES, &system1_state::decrypted_opcodes_map);
 	m_maincpu->set_addrmap(AS_IO, &system1_state::system1_pio_io_map);
-	m_maincpu->set_vblank_int("screen", FUNC(system1_state::irq0_line_hold));
 	m_maincpu->refresh_cb().set(FUNC(system1_state::adjust_cycles));
 }
 
@@ -2348,7 +2343,6 @@ void system1_state::encrypted_sys2_mc8123_maps(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &system1_state::system1_map);
 	m_maincpu->set_addrmap(AS_OPCODES, &system1_state::banked_decrypted_opcodes_map);
 	m_maincpu->set_addrmap(AS_IO, &system1_state::system1_ppi_io_map);
-	m_maincpu->set_vblank_int("screen", FUNC(system1_state::irq0_line_hold));
 	m_maincpu->refresh_cb().set(FUNC(system1_state::adjust_cycles));
 }
 
@@ -2498,6 +2492,7 @@ void system1_state::spattera(machine_config &config)
 	encrypted_sys1pio_maps(config);
 	z80.set_decrypted_tag(":decrypted_opcodes");
 }
+
 void system1_state::pitfall2(machine_config &config)
 {
 	sys1pio(config);
@@ -4045,12 +4040,12 @@ ROM_START( shtngmst )
 
 	// These proms are located on the main board.
 	ROM_REGION( 0x0300, "color_proms", 0 )
-	ROM_LOAD( "epr-7113.ic20",   0x00000, 0x0100, CRC(5c0e1360) SHA1(2011b3eef2a58f9bd3f3b1bb9e6c201db85727c2) ) // palette red component
-	ROM_LOAD( "epr-7112.ic14",   0x00100, 0x0100, CRC(46fbd351) SHA1(1fca7fbc5d5f8e13e58bbac735511bd0af392446) ) // palette green component
-	ROM_LOAD( "epr-7111.ic8",    0x00200, 0x0100, CRC(8123b6b9) SHA1(fb2c5498f0603b5cd270402a738c891a85453666) ) // palette blue component - N82S129AN
+	ROM_LOAD( "epr-7113.ic20",   0x0000, 0x0100, CRC(5c0e1360) SHA1(2011b3eef2a58f9bd3f3b1bb9e6c201db85727c2) ) // palette red component
+	ROM_LOAD( "epr-7112.ic14",   0x0100, 0x0100, CRC(46fbd351) SHA1(1fca7fbc5d5f8e13e58bbac735511bd0af392446) ) // palette green component
+	ROM_LOAD( "epr-7111.ic8",    0x0200, 0x0100, CRC(8123b6b9) SHA1(fb2c5498f0603b5cd270402a738c891a85453666) ) // palette blue component - N82S129AN
 
 	ROM_REGION( 0x0100, "lookup_proms", 0 )
-	ROM_LOAD( "pr5317.ic37",   0x00000, 0x0100, CRC(648350b8) SHA1(c7986aa9127ef5b50b845434cb4e81dff9861cd2) ) // N82S129AN
+	ROM_LOAD( "pr5317.ic37",     0x0000, 0x0100, CRC(648350b8) SHA1(c7986aa9127ef5b50b845434cb4e81dff9861cd2) ) // N82S129AN
 
 	// These pld's are located on the main board.
 	ROM_REGION( 0x1000, "plds", 0 )
@@ -4099,12 +4094,10 @@ ROM_START( choplift )
 	ROM_LOAD( "pr5317.ic28",    0x0000, 0x0100, CRC(648350b8) SHA1(c7986aa9127ef5b50b845434cb4e81dff9861cd2) )
 
 	ROM_REGION( 0x0618, "plds", 0 )
-	ROM_LOAD( "315-5152.ic10",   0x00000, 0x0104, CRC(2c9229b4) SHA1(9755013afcf89f99d7a399c7e223e027761cf89a) ) // PAL16R4A
-	ROM_LOAD( "315-5138.ic11",   0x00000, 0x0104, CRC(dd223015) SHA1(8d70f91b118e8653dda1efee3eaea287ae63809f) ) // TI PAL16R4NC
-	ROM_LOAD( "315-5139.ic50",   0x00000, 0x00e7, CRC(943d91b0) SHA1(37c98085d580808aaeb01726a9f59705590378c4) ) // CK2605
-	ROM_LOAD( "315-5025.ic7",    0x00000, 0x0104, NO_DUMP )
-	ROM_LOAD( "315-5025.ic13",   0x00000, 0x0104, NO_DUMP )
-	ROM_LOAD( "315-5025.ic19",   0x00000, 0x0104, NO_DUMP )
+	ROM_LOAD( "315-5152.ic10",  0x0000, 0x0104, CRC(2c9229b4) SHA1(9755013afcf89f99d7a399c7e223e027761cf89a) ) // PAL16R4A
+	ROM_LOAD( "315-5138.ic11",  0x0000, 0x0104, CRC(dd223015) SHA1(8d70f91b118e8653dda1efee3eaea287ae63809f) ) // TI PAL16R4NC
+	ROM_LOAD( "315-5139.ic50",  0x0000, 0x00e7, CRC(943d91b0) SHA1(37c98085d580808aaeb01726a9f59705590378c4) ) // CK2605
+	// Note that IC7, IC13 and IC19 (315-5025) are not PLDs, but are a custom graphics shifter.
 ROM_END
 
 /*
@@ -4143,20 +4136,16 @@ ROM_START( chopliftu )
 	ROM_LOAD( "pr5317.ic28",    0x0000, 0x0100, CRC(648350b8) SHA1(c7986aa9127ef5b50b845434cb4e81dff9861cd2) )
 
 	ROM_REGION( 0x0618, "plds", 0 )
-	ROM_LOAD( "315-5152.ic10",   0x00000, 0x0104, CRC(2c9229b4) SHA1(9755013afcf89f99d7a399c7e223e027761cf89a) ) // PAL16R4A
-	ROM_LOAD( "315-5138.ic11",   0x00000, 0x0104, CRC(dd223015) SHA1(8d70f91b118e8653dda1efee3eaea287ae63809f) ) // TI PAL16R4NC
-	ROM_LOAD( "315-5139.ic50",   0x00000, 0x00e7, CRC(943d91b0) SHA1(37c98085d580808aaeb01726a9f59705590378c4) ) // CK2605
-	ROM_LOAD( "315-5025.ic7",    0x00000, 0x0104, NO_DUMP )
-	ROM_LOAD( "315-5025.1c13",   0x00000, 0x0104, NO_DUMP )
-	ROM_LOAD( "315-5025.ic19",   0x00000, 0x0104, NO_DUMP )
+	ROM_LOAD( "315-5152.ic10",  0x0000, 0x0104, CRC(2c9229b4) SHA1(9755013afcf89f99d7a399c7e223e027761cf89a) ) // PAL16R4A
+	ROM_LOAD( "315-5138.ic11",  0x0000, 0x0104, CRC(dd223015) SHA1(8d70f91b118e8653dda1efee3eaea287ae63809f) ) // TI PAL16R4NC
+	ROM_LOAD( "315-5139.ic50",  0x0000, 0x00e7, CRC(943d91b0) SHA1(37c98085d580808aaeb01726a9f59705590378c4) ) // CK2605
+	// Note that IC7, IC13 and IC19 (315-5025) are not PLDs, but are a custom graphics shifter.
 ROM_END
 
 /*
     Choplifter (Bootleg)
     Year: 1985
     System 2
-
-
 
     Small Daughterboard marked 600A
 

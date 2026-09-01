@@ -66,7 +66,7 @@ private:
 	// video-related
 	uint8_t m_layer_colorbase[3]{};
 	uint8_t m_sprite_colorbase = 0;
-	int m_layerpri[3]{};
+	int32_t m_layerpri[3]{};
 
 	// misc
 	emu_timer *m_nmi_blocked = nullptr;
@@ -95,8 +95,8 @@ private:
 
 K052109_CB_MEMBER(parodius_state::tile_callback)
 {
-	*code |= ((*color & 0x03) << 8) | ((*color & 0x10) << 6) | ((*color & 0x0c) << 9) | (bank << 13);
-	*color = m_layer_colorbase[layer] + ((*color & 0xe0) >> 5);
+	code |= ((color & 0x03) << 8) | ((color & 0x10) << 6) | ((color & 0x0c) << 9) | (bank << 13);
+	color = m_layer_colorbase[layer] + ((color & 0xe0) >> 5);
 }
 
 /***************************************************************************
@@ -107,17 +107,17 @@ K052109_CB_MEMBER(parodius_state::tile_callback)
 
 K053244_CB_MEMBER(parodius_state::sprite_callback)
 {
-	int pri = 0x20 | ((*color & 0x60) >> 2);
+	int pri = 0x20 | ((color & 0x60) >> 2);
 	if (pri <= m_layerpri[2])
-		*priority = 0;
+		priority = 0;
 	else if (pri > m_layerpri[2] && pri <= m_layerpri[1])
-		*priority = 0xf0;
+		priority = 0xf0;
 	else if (pri > m_layerpri[1] && pri <= m_layerpri[0])
-		*priority = 0xf0 | 0xcc;
+		priority = 0xf0 | 0xcc;
 	else
-		*priority = 0xf0 | 0xcc | 0xaa;
+		priority = 0xf0 | 0xcc | 0xaa;
 
-	*color = m_sprite_colorbase + (*color & 0x1f);
+	color = m_sprite_colorbase + (color & 0x1f);
 }
 
 
@@ -198,7 +198,7 @@ void parodius_state::_3fc0_w(uint8_t data)
 
 void parodius_state::sh_irqtrigger_w(uint8_t data)
 {
-	m_audiocpu->set_input_line_and_vector(0, HOLD_LINE, 0xff); // Z80
+	m_audiocpu->set_input_line(0, HOLD_LINE); // Z80 IM1
 }
 
 void parodius_state::sound_arm_nmi_w(uint8_t data)
@@ -342,7 +342,6 @@ void parodius_state::machine_reset()
 
 	// Z80 _NMI goes low at same time as reset
 	m_audiocpu->set_input_line(INPUT_LINE_NMI, ASSERT_LINE);
-	m_audiocpu->pulse_input_line(INPUT_LINE_RESET, attotime::zero);
 }
 
 void parodius_state::banking_callback(uint8_t data)
@@ -368,7 +367,7 @@ void parodius_state::parodius(machine_config &config)
 	WATCHDOG_TIMER(config, "watchdog");
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(24_MHz_XTAL / 4, 384, 0+16, 320-16, 264, 16, 240);
 	screen.set_screen_update(FUNC(parodius_state::screen_update));
 	screen.set_palette("palette");
@@ -385,7 +384,7 @@ void parodius_state::parodius(machine_config &config)
 	m_k053245->set_palette("palette");
 	m_k053245->set_sprite_callback(FUNC(parodius_state::sprite_callback));
 
-	K053251(config, m_k053251, 0);
+	K053251(config, m_k053251);
 
 	// sound hardware
 	SPEAKER(config, "speaker", 2).front();

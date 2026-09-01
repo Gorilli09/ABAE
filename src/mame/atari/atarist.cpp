@@ -1415,6 +1415,8 @@ void st_state::common(machine_config &config)
 
 	// software lists
 	SOFTWARE_LIST(config, "flop_list").set_original("st_flop");
+	SOFTWARE_LIST(config, "demos_list").set_original("st_flop_demos");
+	SOFTWARE_LIST(config, "flop_generic_list").set_compatible("generic_flop_35").set_filter("st");
 	SOFTWARE_LIST(config, "cart_list").set_original("st_cart");
 }
 
@@ -1430,7 +1432,7 @@ void st_state::st(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &st_state::st_super_map);
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_screen_update(m_video, FUNC(st_video_device::screen_update));
 
 	ST_VIDEO(config, m_video, Y2);
@@ -1468,7 +1470,7 @@ void megast_state::megast(machine_config &config)
 	m_stb->int_callback().set(m_mfp, FUNC(mc68901_device::i3_w));
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_screen_update(m_video, FUNC(st_video_device::screen_update));
 
 	ST_VIDEO(config, m_video, Y2);
@@ -1509,7 +1511,7 @@ void ste_state::ste(machine_config &config)
 	m_stb->int_callback().set(m_mfp, FUNC(mc68901_device::i3_w));
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_screen_update(m_videox, FUNC(ste_video_device::screen_update));
 	m_screen->set_raw(Y2/4, ATARIST_HTOT_PAL, ATARIST_HBEND_PAL, ATARIST_HBSTART_PAL, ATARIST_VTOT_PAL, ATARIST_VBEND_PAL, ATARIST_VBSTART_PAL);
 
@@ -1571,7 +1573,7 @@ void stbook_state::stbook(machine_config &config)
 	m_stb->int_callback().set(m_mfp, FUNC(mc68901_device::i3_w));
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_LCD);
+	SCREEN(config, m_screen).set_lcd();
 	m_screen->set_screen_update(m_videox, FUNC(stbook_video_device::screen_update));
 	m_screen->set_refresh_hz(60);
 	m_screen->set_size(640, 400);
@@ -1934,6 +1936,12 @@ ROM_END
 //-------------------------------------------------
 //  ROM( stacy )
 //-------------------------------------------------
+
+// STacy ROM part numbers (type TC571001D-15):
+// C301119-001 + C301120-001
+// C301121-001 + C301122-001
+// C301125-001 + C301126-001 Germany
+// C301133-001 + C301134-001
 
 #if 0
 ROM_START( stacy )

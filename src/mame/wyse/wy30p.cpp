@@ -11,7 +11,7 @@
 
 #include "emu.h"
 #include "bus/wysekbd/wysekbd.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8051.h"
 #include "machine/eepromser.h"
 #include "screen.h"
 
@@ -114,7 +114,7 @@ void wy30p_state::wy30p(machine_config &config)
 {
 	i8031_device &maincpu(I8031(config, "maincpu", 7.3728_MHz_XTAL));
 	maincpu.set_addrmap(AS_PROGRAM, &wy30p_state::prog_map);
-	maincpu.set_addrmap(AS_IO, &wy30p_state::ext_map);
+	maincpu.set_addrmap(AS_DATA, &wy30p_state::ext_map);
 	maincpu.port_in_cb<1>().set(FUNC(wy30p_state::p1_r));
 	maincpu.port_in_cb<3>().set(FUNC(wy30p_state::p3_r));
 	maincpu.port_out_cb<3>().set(m_eeprom, FUNC(eeprom_serial_er5911_device::cs_write)).bit(3);
@@ -125,7 +125,7 @@ void wy30p_state::wy30p(machine_config &config)
 
 	WYSE_KEYBOARD(config, m_keyboard, wy30_keyboards, "wy30");
 
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(31.2795_MHz_XTAL * 2 / 3, 1050, 0, 800, 331, 0, 312); // divider and dimensions guessed
 	m_screen->set_screen_update(FUNC(wy30p_state::screen_update));
 	m_screen->screen_vblank().set_inputline("maincpu", MCS51_INT0_LINE);

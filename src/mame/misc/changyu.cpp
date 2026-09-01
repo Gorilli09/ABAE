@@ -52,7 +52,7 @@ main PCB (marked 9101):
 #include "emu.h"
 
 #include "cpu/m6502/m6502.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i80c51.h"
 #include "machine/gen_latch.h"
 #include "machine/ticket.h"
 #include "sound/ay8910.h"
@@ -451,7 +451,7 @@ void changyu_state::changyu(machine_config &config)
 	I8751(config, m_mcu, XTAL(8'000'000));
 //  m_mcu->set_disable();
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(60);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(0));
 	screen.set_size(64*8, 32*8);
@@ -483,7 +483,7 @@ void changyu2_state::changyu2(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &changyu2_state::main2_map);
 
 	auto &mcu(I87C51(config.replace(), m_mcu, XTAL(8'000'000)));
-	mcu.set_addrmap(AS_IO, &changyu2_state::ext2_map);
+	mcu.set_addrmap(AS_DATA, &changyu2_state::ext2_map);
 	mcu.port_in_cb<0>().set(FUNC(changyu2_state::mcu_p1_r));
 	mcu.port_out_cb<0>().set([] (u8 data) { osd_printf_error("MCU P1 %02x\n", data); });
 

@@ -452,8 +452,8 @@ class LayoutChecker(Minifyer):
             if 'string' not in attrs:
                 self.handle_error('Element text missing attribute string')
             align = self.check_int_attribute(name, attrs, 'align', None)
-            if (align is not None) and ((0 > align) or (2 < align)):
-                self.handle_error('Element text attribute align "%s" not in valid range 0-2' % (attrs['align'], ))
+            if (align is not None) and ((0 > align) or (3 < align)):
+                self.handle_error('Element text attribute align "%s" not in valid range 0-3' % (attrs['align'], ))
             self.check_component(name, attrs)
         elif 'simplecounter' == name:
             maxstate = self.check_int_attribute(name, attrs, 'maxstate', None)
@@ -469,19 +469,6 @@ class LayoutChecker(Minifyer):
         elif 'image' == name:
             self.have_file = 'file' in attrs
             self.have_data = None
-            self.check_component(name, attrs)
-        elif 'reel' == name:
-            # TODO: validate symbollist and improve validation of other attributes
-            self.check_int_attribute(name, attrs, 'stateoffset', None)
-            numsymbolsvisible = self.check_int_attribute(name, attrs, 'numsymbolsvisible', None)
-            if (numsymbolsvisible is not None) and (0 >= numsymbolsvisible):
-                self.handle_error('Element reel attribute numsymbolsvisible "%s" not positive' % (attrs['numsymbolsvisible'], ))
-            reelreversed = self.check_int_attribute(name, attrs, 'reelreversed', None)
-            if (reelreversed is not None) and ((0 > reelreversed) or (1 < reelreversed)):
-                self.handle_error('Element reel attribute reelreversed "%s" not in valid range 0-1' % (attrs['reelreversed'], ))
-            beltreel = self.check_int_attribute(name, attrs, 'beltreel', None)
-            if (beltreel is not None) and ((0 > beltreel) or (1 < beltreel)):
-                self.handle_error('Element reel attribute beltreel "%s" not in valid range 0-1' % (attrs['beltreel'], ))
             self.check_component(name, attrs)
         else:
             self.handle_error('Encountered unexpected element %s' % (name, ))

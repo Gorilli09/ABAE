@@ -8,7 +8,8 @@
 
 #include "emu.h"
 //#include "bus/midi/midi.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8052.h"
+#include "cpu/mcs51/i80c51.h"
 #include "mb62h195.h"
 #include "mb63h149.h"
 #include "machine/nvram.h"
@@ -116,7 +117,7 @@ void alphajuno_state::ajuno1(machine_config &config)
 {
 	I8032(config, m_maincpu, 12_MHz_XTAL); // P8032AH
 	m_maincpu->set_addrmap(AS_PROGRAM, &alphajuno_state::prog_map);
-	m_maincpu->set_addrmap(AS_IO, &alphajuno_state::ajuno1_ext_map);
+	m_maincpu->set_addrmap(AS_DATA, &alphajuno_state::ajuno1_ext_map);
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0); // TC5517APL + battery
 
@@ -132,7 +133,7 @@ void alphajuno_state::ajuno1(machine_config &config)
 	UPD7001(config, "adc", RES_K(27), CAP_P(47));
 
 	// LCD: LM16155A or LM16155B
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_LCD));
+	screen_device &screen(SCREEN(config, "screen").set_lcd());
 	screen.set_refresh_hz(60);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); /* not accurate */
 	screen.set_screen_update("lcdc", FUNC(hd44780_device::screen_update));
@@ -151,7 +152,7 @@ void alphajuno_state::ajuno1(machine_config &config)
 void alphajuno_state::ajuno2(machine_config &config)
 {
 	ajuno1(config);
-	m_maincpu->set_addrmap(AS_IO, &alphajuno_state::ajuno2_ext_map);
+	m_maincpu->set_addrmap(AS_DATA, &alphajuno_state::ajuno2_ext_map);
 
 	mb63h149_device &keyscan(MB63H149(config, "keyscan", 12_MHz_XTAL));
 	keyscan.int_callback().set_inputline(m_maincpu, MCS51_INT0_LINE);
@@ -161,7 +162,7 @@ void alphajuno_state::mks50(machine_config &config)
 {
 	I80C31(config, m_maincpu, 12_MHz_XTAL); // MSM80C31P
 	m_maincpu->set_addrmap(AS_PROGRAM, &alphajuno_state::prog_map);
-	m_maincpu->set_addrmap(AS_IO, &alphajuno_state::mks50_ext_map);
+	m_maincpu->set_addrmap(AS_DATA, &alphajuno_state::mks50_ext_map);
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0); // TC5564PL-20 + battery
 
@@ -171,7 +172,7 @@ void alphajuno_state::mks50(machine_config &config)
 	//MB87123(config, "dco", 12_MHz_XTAL);
 
 	// LCD Unit: DM011Z-1DL3
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_LCD));
+	screen_device &screen(SCREEN(config, "screen").set_lcd());
 	screen.set_refresh_hz(60);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); /* not accurate */
 	screen.set_screen_update("lcdc", FUNC(hd44780_device::screen_update));

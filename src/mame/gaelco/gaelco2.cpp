@@ -40,7 +40,7 @@
 
 #include "gaelco_ds5002fp.h"
 
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/ds5002fp.h"
 #include "machine/eepromser.h"
 #include "sound/gaelco.h"
 
@@ -75,6 +75,11 @@ void gaelco2_state::mcu_hostmem_map(address_map &map)
 	map(0x8000, 0xffff).rw(FUNC(gaelco2_state::shareram_r), FUNC(gaelco2_state::shareram_w)); // confirmed that 0x8000 - 0xffff is a window into 68k shared RAM
 }
 
+template <unsigned Which>
+void gaelco2_state::coin_counter_w(int state)
+{
+	machine().bookkeeping().coin_counter_w(Which, state);
+}
 
 /*============================================================================
                             MANIAC SQUARE (FINAL)
@@ -185,7 +190,7 @@ void gaelco2_state::maniacsq(machine_config &config)
 	// video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(59.1);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	screen.set_size(64*16, 32*16);
@@ -196,8 +201,6 @@ void gaelco2_state::maniacsq(machine_config &config)
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_gaelco2);
 	PALETTE(config, m_palette).set_entries(0x10000);
-
-	MCFG_VIDEO_START_OVERRIDE(gaelco2_state,gaelco2)
 
 	// sound hardware
 	SPEAKER(config, "speaker", 2).front();
@@ -512,7 +515,7 @@ void gaelco2_state::saltcrdi(machine_config &config)
 	// video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(59.1);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	screen.set_size(64*16, 32*16);
@@ -523,8 +526,6 @@ void gaelco2_state::saltcrdi(machine_config &config)
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_gaelco2);
 	PALETTE(config, m_palette).set_entries(0x10000);
-
-	MCFG_VIDEO_START_OVERRIDE(gaelco2_state,gaelco2)
 
 	// sound hardware
 	SPEAKER(config, "speaker", 2).front();
@@ -621,7 +622,7 @@ ROM_START( sltpcycla )
 	ROM_LOAD( "bici_u41_1f75_3h_7-4-97_27c010.u41", 0x01a0000, 0x0020000, CRC(c4d24254) SHA1(e6ff7624e628dc6ace11a50b6ff89812844b52c5) )
 	ROM_FILL(                                       0x0220000, 0x0020000, 0x00 )         // to decode GFX as 5bpp
 
-	ROM_REGION( 0x0800, "iomcu", 0 ) // on IO board
+	ROM_REGION( 0x0800, "iomcu", 0 ) // on I/O board
 	ROM_LOAD( "2-st62t15c6", 0x0000, 0x0800, NO_DUMP ) // 2KBytes internal ROM
 
 	ROM_REGION( 0x0104, "pals", 0 )
@@ -645,7 +646,7 @@ ROM_START( sltpcyclb )
 	ROM_LOAD( "bici_u41_1f75_3h_7-4-97_27c010.u41", 0x01a0000, 0x0020000, CRC(c4d24254) SHA1(e6ff7624e628dc6ace11a50b6ff89812844b52c5) )
 	ROM_FILL(                                       0x0220000, 0x0020000, 0x00 )         // to decode GFX as 5bpp
 
-	ROM_REGION( 0x0800, "iomcu", 0 ) // on IO board
+	ROM_REGION( 0x0800, "iomcu", 0 ) // on I/O board
 	ROM_LOAD( "2-st62t15c6", 0x0000, 0x0800, NO_DUMP ) // 2KBytes internal ROM
 
 	ROM_REGION( 0x0104, "pals", 0 )
@@ -748,7 +749,7 @@ ROM_START( sltpstep )
 	ROM_LOAD( "st_u_37.u37", 0x0180000, 0x0080000, CRC(5543d4d1) SHA1(1f9f358dfb252412468ddd68331bda5acbe99329) ) // 27C4000DC
 	ROM_FILL(                0x0200000, 0x0080000, 0x00 )         // to decode GFX as 5bpp
 
-	ROM_REGION( 0x0800, "iomcu", 0 ) // on IO board
+	ROM_REGION( 0x0800, "iomcu", 0 ) // on I/O board
 	ROM_LOAD( "cpu_6022-1-st62t15b6.ic4", 0x0000, 0x0800, NO_DUMP ) // 2KBytes internal ROM
 
 	ROM_REGION( 0x0104, "pals", 0 )
@@ -767,7 +768,7 @@ ROM_START( sltpstepa )
 	ROM_LOAD( "st_u_37.u37", 0x0180000, 0x0080000, CRC(5543d4d1) SHA1(1f9f358dfb252412468ddd68331bda5acbe99329) ) // 27C4000DC
 	ROM_FILL(                0x0200000, 0x0080000, 0x00 )         // to decode GFX as 5bpp
 
-	ROM_REGION( 0x0800, "iomcu", 0 ) // on IO board
+	ROM_REGION( 0x0800, "iomcu", 0 ) // on I/O board
 	ROM_LOAD( "cpu_6022-1-st62t15b6.ic4", 0x0000, 0x0800, NO_DUMP ) // 2KBytes internal ROM
 
 	ROM_REGION( 0x0104, "pals", 0 )
@@ -846,7 +847,7 @@ u16 gaelco2_state::srollnd_share_sim_r(offs_t offset, u16 mem_mask)
 		ret = 0x0000;
 
 
-	// reads a bunch of data (game specific? backup ram? default backup ram?) from device (0x180 words - copied to start of RAM)
+	// reads a bunch of data (game specific? backup RAM? default backup RAM?) from device (0x180 words - copied to start of RAM)
 	if (m_maincpu->pc() == 0x83da)
 	{
 		ret = 0x0000;
@@ -871,8 +872,8 @@ u16 gaelco2_state::srollnd_share_sim_r(offs_t offset, u16 mem_mask)
 		}
 	}
 
-
-	logerror("%s: srollnd_share_sim_r %04x: %04x (%04x)\n", machine().describe_context(), offset, ret, mem_mask);
+	if (!machine().side_effects_disabled())
+		logerror("%s: srollnd_share_sim_r %04x: %04x (%04x)\n", machine().describe_context(), offset, ret, mem_mask);
 
 	return ret;
 }
@@ -1009,7 +1010,7 @@ REF: 990315
 -----------------------------------------------------------------------------|
 */
 ROM_START( play2000_50i )
-	/*at least 1.u40 is bad, on every 0x40 bytes the first four are always 0xff.*/
+	// At least 1.u40 is bad, on every 0x40 bytes the first four are always 0xff.
 	ROM_REGION( 0x100000, "maincpu", 0 )    // 68000 code
 	ROM_LOAD16_BYTE( "2.u39", 0x000000, 0x020000, BAD_DUMP CRC(9939299e) SHA1(55303a2adf199f4b5a60f57be7480b0e119f8624) )
 	ROM_LOAD16_BYTE( "1.u40", 0x000001, 0x020000, BAD_DUMP CRC(311c2f94) SHA1(963d6b5f479598145146fcb8b7c6ce77fbc92b07) )
@@ -1032,6 +1033,32 @@ ROM_START( play2000_50i )
 
 	ROM_REGION( 0x0600, "plds", 0 )
 	ROM_LOAD( "palce16v8h.u29",  0x0000, 0x0117, BAD_DUMP CRC(4a0a6f39) SHA1(57351e471649391c9abf110828fe2f128fe84eee) )
+ROM_END
+
+// REF: 990315 PCB. This game uses a Touch Screen
+ROM_START( luckyclrs )
+	ROM_REGION( 0x100000, "maincpu", 0 )    // 68000 code
+	ROM_LOAD16_BYTE( "2_nm27c010q.u39", 0x000000, 0x020000, CRC(b53dc48f) SHA1(c5f21f958c936edd58023fe7c5a568fc8fe09a35) )
+	ROM_LOAD16_BYTE( "1_m27c1001.u40",  0x000001, 0x020000, CRC(f49787e9) SHA1(3be6e865e071066b3f53e7f46da3cf7e117913c6) )
+
+	ROM_REGION( 0x8000, "gaelco_ds5002fp:sram", 0 ) // DS5002FP code
+	ROM_LOAD( "ds5002fp_lucky_1.1i.mcu", 0x00000, 0x8000, NO_DUMP )
+
+	ROM_REGION( 0x100, "gaelco_ds5002fp:mcu:internal", ROMREGION_ERASE00 )
+	DS5002FP_SET_MON( 0x79 )
+	DS5002FP_SET_RPCTL( 0x00 )
+	DS5002FP_SET_CRCR( 0x80 )
+
+	ROM_REGION( 0x0a00000, "gfx", 0 ) // GFX + Sound
+	ROM_LOAD( "6_m27c801.u51",  0x0000000, 0x0100000, CRC(51325529) SHA1(160acd76f4f1190287d6ee87a680d4f60c73984f) )
+	ROM_LOAD( "4_m27c2001.u53", 0x0200000, 0x0040000, CRC(3e01f0ab) SHA1(84f89332c87bb9f8239dd3b5893c8d88e3600ed5) )
+	ROM_LOAD( "7_m27c2001.u50", 0x0400000, 0x0040000, CRC(a59915f7) SHA1(c23217863e7c3d930a470f9ede03de45203fe2cb) )
+	ROM_LOAD( "5_m27c2001.u52", 0x0600000, 0x0040000, CRC(9fb7bd98) SHA1(a565a6233424f0b35df9ea4a359f88934b85fd6f) )
+	ROM_LOAD( "3_m27c2001.u54", 0x0800000, 0x0040000, CRC(66c65357) SHA1(28526d210113e2688df733e90799a8109be440ea) )
+
+	ROM_REGION( 0x0600, "plds", 0 )
+	ROM_LOAD( "palce16v8h-25.u28", 0x0000, 0x0117, NO_DUMP )
+	ROM_LOAD( "palce16v8h-25.u29", 0x0000, 0x0117, NO_DUMP )
 ROM_END
 
 /* Super Roller (Nova Desitec on Gaelco hardware)
@@ -1153,7 +1180,7 @@ void gaelco2_state::play2000(machine_config &config)
 	// video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(59.1);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	screen.set_size(64*16, 32*16);
@@ -1164,8 +1191,6 @@ void gaelco2_state::play2000(machine_config &config)
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_gaelco2);
 	PALETTE(config, m_palette).set_entries(0x10000);
-
-	MCFG_VIDEO_START_OVERRIDE(gaelco2_state,gaelco2)
 
 	// sound hardware
 	SPEAKER(config, "speaker", 2).front();
@@ -1191,7 +1216,7 @@ void gaelco2_state::srollnd(machine_config& config)
 	// video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(59.1);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	screen.set_size(64*16, 32*16);
@@ -1202,8 +1227,6 @@ void gaelco2_state::srollnd(machine_config& config)
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_gaelco2);
 	PALETTE(config, m_palette).set_entries(0x10000);
-
-	MCFG_VIDEO_START_OVERRIDE(gaelco2_state,gaelco2)
 
 	// sound hardware
 	SPEAKER(config, "speaker", 2).front();
@@ -1284,8 +1307,8 @@ void bang_state::bang(machine_config &config)
 	EEPROM_93C66_16BIT(config, m_eeprom);
 
 	LS259(config, m_mainlatch);
-	m_mainlatch->q_out_cb<0>().set(FUNC(gaelco2_state::coin1_counter_w));
-	m_mainlatch->q_out_cb<1>().set(FUNC(gaelco2_state::coin2_counter_w));
+	m_mainlatch->q_out_cb<0>().set(FUNC(bang_state::coin_counter_w<0>));
+	m_mainlatch->q_out_cb<1>().set(FUNC(bang_state::coin_counter_w<1>));
 	m_mainlatch->q_out_cb<4>().set("eeprom", FUNC(eeprom_serial_93cxx_device::di_write));   // EEPROM data
 	m_mainlatch->q_out_cb<5>().set("eeprom", FUNC(eeprom_serial_93cxx_device::clk_write));  // EEPROM serial clock
 	m_mainlatch->q_out_cb<6>().set("eeprom", FUNC(eeprom_serial_93cxx_device::cs_write));   // EEPROM chip select
@@ -1293,7 +1316,7 @@ void bang_state::bang(machine_config &config)
 	// Video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(59.1);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	screen.set_size(64*16, 32*16);
@@ -1304,8 +1327,6 @@ void bang_state::bang(machine_config &config)
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_gaelco2);
 	PALETTE(config, m_palette).set_entries(0x10000);
-
-	MCFG_VIDEO_START_OVERRIDE(bang_state,gaelco2)
 
 	// sound hardware
 	SPEAKER(config, "speaker", 2).front();
@@ -1657,7 +1678,7 @@ void gaelco2_state::alighunt(machine_config &config)
 	// video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(59.1);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	screen.set_size(64*16, 32*16);
@@ -1668,8 +1689,6 @@ void gaelco2_state::alighunt(machine_config &config)
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_gaelco2);
 	PALETTE(config, m_palette).set_entries(0x10000);
-
-	MCFG_VIDEO_START_OVERRIDE(gaelco2_state,gaelco2)
 
 	// sound hardware
 	SPEAKER(config, "speaker", 2).front();
@@ -1684,6 +1703,7 @@ void gaelco2_state::alighunt(machine_config &config)
 void gaelco2_state::alighunt_d5002fp(machine_config &config)
 {
 	alighunt(config);
+
 	GAELCO_DS5002FP(config, "gaelco_ds5002fp", XTAL(24'000'000) / 2).set_addrmap(0, &gaelco2_state::mcu_hostmem_map); // 12 MHz
 	config.set_perfect_quantum("gaelco_ds5002fp:mcu");
 }
@@ -1923,18 +1943,18 @@ ROM_END
   ============================================================================*/
 
 
-void gaelco2_state::touchgo_map(address_map &map)
+void gaelco2_dual_state::touchgo_map(address_map &map)
 {
 	map(0x000000, 0x0fffff).rom();                                                                                         // ROM
-	map(0x200000, 0x20ffff).ram().w(FUNC(gaelco2_state::vram_w)).share("spriteram");                                       // Video RAM
+	map(0x200000, 0x20ffff).ram().w(FUNC(gaelco2_dual_state::vram_w)).share("spriteram");                                  // Video RAM
 	map(0x202890, 0x2028ff).rw("gaelco", FUNC(gaelco_gae1_device::gaelcosnd_r), FUNC(gaelco_gae1_device::gaelcosnd_w));    // Sound Registers
-	map(0x210000, 0x211fff).ram().w(FUNC(gaelco2_state::palette_w)).share(m_paletteram);                                   // Palette
-	map(0x218004, 0x218009).ram().w(FUNC(gaelco2_state::vregs_w)).share(m_vregs);                                          // Video Registers
+	map(0x210000, 0x211fff).ram().w(FUNC(gaelco2_dual_state::palette_w)).share(m_paletteram);                              // Palette
+	map(0x218004, 0x218009).ram().w(FUNC(gaelco2_dual_state::vregs_w)).share(m_vregs);                                     // Video Registers
 	map(0x300000, 0x300001).portr("IN0");                                                                                  // DSW #1 + Input 1P
 	map(0x300002, 0x300003).portr("IN1");                                                                                  // DSW #2 + Input 2P
 	map(0x300004, 0x300005).portr("IN2");                                                                                  // COINSW + Input 3P
 	map(0x300006, 0x300007).portr("IN3");                                                                                  // SERVICESW + Input 4P
-	map(0x500000, 0x500001).select(0x0038).w(FUNC(gaelco2_state::wrally2_latch_w));                                        // Coin counters
+	map(0x500000, 0x500001).select(0x0038).w(FUNC(gaelco2_dual_state::wrally2_latch_w));                                   // Coin counters
 	map(0xfe0000, 0xfe7fff).ram();                                                                                         // Work RAM
 	map(0xfe8000, 0xfeffff).ram().share(m_shareram);                                                                       // Work RAM (shared with D5002FP)
 }
@@ -2047,18 +2067,18 @@ static INPUT_PORTS_START( touchgo )
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_SERVICE4 ) PORT_TOGGLE
 INPUT_PORTS_END
 
-void gaelco2_state::touchgo(machine_config &config)
+void gaelco2_dual_state::touchgo(machine_config &config)
 {
 	// basic machine hardware
 	M68000(config, m_maincpu, XTAL(32'000'000) / 2); // 16 MHz
-	m_maincpu->set_addrmap(AS_PROGRAM, &gaelco2_state::touchgo_map);
-	m_maincpu->set_vblank_int("lscreen", FUNC(gaelco2_state::irq6_line_hold));
+	m_maincpu->set_addrmap(AS_PROGRAM, &gaelco2_dual_state::touchgo_map);
+	m_maincpu->set_vblank_int("lscreen", FUNC(gaelco2_dual_state::irq6_line_hold));
 
 	LS259(config, m_mainlatch); // IC6
-	m_mainlatch->q_out_cb<0>().set(FUNC(gaelco2_state::coin1_counter_w));
-	m_mainlatch->q_out_cb<1>().set(FUNC(gaelco2_state::coin2_counter_w));
-	m_mainlatch->q_out_cb<2>().set(FUNC(gaelco2_state::coin3_counter_w));
-	m_mainlatch->q_out_cb<3>().set(FUNC(gaelco2_state::coin4_counter_w));
+	m_mainlatch->q_out_cb<0>().set(FUNC(gaelco2_dual_state::coin_counter_w<0>));
+	m_mainlatch->q_out_cb<1>().set(FUNC(gaelco2_dual_state::coin_counter_w<1>));
+	m_mainlatch->q_out_cb<2>().set(FUNC(gaelco2_dual_state::coin_counter_w<2>));
+	m_mainlatch->q_out_cb<3>().set(FUNC(gaelco2_dual_state::coin_counter_w<3>));
 
 	// video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
@@ -2066,24 +2086,22 @@ void gaelco2_state::touchgo(machine_config &config)
 	PALETTE(config, m_palette).set_entries(0x10000);
 	config.set_default_layout(layout_dualhsxs);
 
-	screen_device &lscreen(SCREEN(config, "lscreen", SCREEN_TYPE_RASTER));
+	screen_device &lscreen(SCREEN(config, "lscreen"));
 	lscreen.set_refresh_hz(59.1);
 	lscreen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	lscreen.set_size(64*16, 32*16);
 	lscreen.set_visarea(0, 480-1, 16, 256-1);
-	lscreen.set_screen_update(FUNC(gaelco2_state::screen_update_left));
+	lscreen.set_screen_update(FUNC(gaelco2_dual_state::screen_update_left));
 	lscreen.set_palette(m_palette);
 
-	screen_device &rscreen(SCREEN(config, "rscreen", SCREEN_TYPE_RASTER));
+	screen_device &rscreen(SCREEN(config, "rscreen"));
 	rscreen.set_refresh_hz(59.1);
 	rscreen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	rscreen.set_size(64*16, 32*16);
 	rscreen.set_visarea(0, 480-1, 16, 256-1);
-	rscreen.set_screen_update(FUNC(gaelco2_state::screen_update_right));
+	rscreen.set_screen_update(FUNC(gaelco2_dual_state::screen_update_right));
 	rscreen.screen_vblank().set("spriteram", FUNC(buffered_spriteram16_device::vblank_copy_rising));
 	rscreen.set_palette(m_palette);
-
-	MCFG_VIDEO_START_OVERRIDE(gaelco2_state,gaelco2_dual)
 
 	// sound hardware
 	/* the chip is stereo, but the game sound is mono because the right channel
@@ -2097,10 +2115,10 @@ void gaelco2_state::touchgo(machine_config &config)
 	gaelco.add_route(1, "speaker", 1.0, 0);
 }
 
-void gaelco2_state::touchgo_d5002fp(machine_config &config)
+void gaelco2_dual_state::touchgo_d5002fp(machine_config &config)
 {
 	touchgo(config);
-	GAELCO_DS5002FP(config, "gaelco_ds5002fp", XTAL(32'000'000) / 2).set_addrmap(0, &gaelco2_state::mcu_hostmem_map); // 16 MHz
+	GAELCO_DS5002FP(config, "gaelco_ds5002fp", XTAL(32'000'000) / 2).set_addrmap(0, &gaelco2_dual_state::mcu_hostmem_map); // 16 MHz
 	config.set_perfect_quantum("gaelco_ds5002fp:mcu");
 }
 
@@ -2482,18 +2500,18 @@ ROM_END
 
 void snowboar_state::snowboar_map(address_map &map)
 {
-	map(0x000000, 0x0fffff).rom();                                                                                                                // ROM
-	map(0x200000, 0x20ffff).ram().w(FUNC(snowboar_state::vram_w)).share("spriteram");                                                              // Video RAM
-	map(0x202890, 0x2028ff).rw("gaelco", FUNC(gaelco_cg1v_device::gaelcosnd_r), FUNC(gaelco_cg1v_device::gaelcosnd_w));                           // Sound Registers
-	map(0x210000, 0x211fff).ram().w(FUNC(snowboar_state::palette_w)).share(m_paletteram);                                                          // Palette
-	map(0x212000, 0x213fff).ram();                                                                                                                // Extra RAM
-	map(0x218004, 0x218009).ram().w(FUNC(snowboar_state::vregs_w)).share(m_vregs);                                                                 // Video Registers
+	map(0x000000, 0x0fffff).rom();                                                                                                                     // ROM
+	map(0x200000, 0x20ffff).ram().w(FUNC(snowboar_state::vram_w)).share("spriteram");                                                                  // Video RAM
+	map(0x202890, 0x2028ff).rw("gaelco", FUNC(gaelco_cg1v_device::gaelcosnd_r), FUNC(gaelco_cg1v_device::gaelcosnd_w));                                // Sound Registers
+	map(0x210000, 0x211fff).ram().w(FUNC(snowboar_state::palette_w)).share(m_paletteram);                                                              // Palette
+	map(0x212000, 0x213fff).ram();                                                                                                                     // Extra RAM
+	map(0x218004, 0x218009).ram().w(FUNC(snowboar_state::vregs_w)).share(m_vregs);                                                                     // Video Registers
 	map(0x300000, 0x300001).portr("P1");
-	map(0x300000, 0x30000f).w(m_mainlatch, FUNC(ls259_device::write_d0)).umask16(0x00ff);                                                         // Coin Counters & serial EEPROM
+	map(0x300000, 0x30000f).w(m_mainlatch, FUNC(ls259_device::write_d0)).umask16(0x00ff);                                                              // Coin Counters & serial EEPROM
 	map(0x300010, 0x300011).portr("P2");
 	map(0x300020, 0x300021).portr("COIN");
-	map(0x310000, 0x31ffff).rw(FUNC(snowboar_state::snowboar_protection_r), FUNC(snowboar_state::snowboar_protection_w)).share(m_snowboar_protection);    // Protection
-	map(0xfe0000, 0xfeffff).ram();                                                                                                                // Work RAM
+	map(0x310000, 0x31ffff).rw(FUNC(snowboar_state::snowboar_protection_r), FUNC(snowboar_state::snowboar_protection_w)).share(m_snowboar_protection); // Protection
+	map(0xfe0000, 0xfeffff).ram();                                                                                                                     // Work RAM
 }
 
 
@@ -2539,8 +2557,8 @@ void snowboar_state::snowboar(machine_config &config)
 	EEPROM_93C66_16BIT(config, m_eeprom);
 
 	LS259(config, m_mainlatch);
-	m_mainlatch->q_out_cb<0>().set(FUNC(snowboar_state::coin1_counter_w));
-	m_mainlatch->q_out_cb<1>().set(FUNC(snowboar_state::coin2_counter_w));
+	m_mainlatch->q_out_cb<0>().set(FUNC(snowboar_state::coin_counter_w<0>));
+	m_mainlatch->q_out_cb<1>().set(FUNC(snowboar_state::coin_counter_w<1>));
 	m_mainlatch->q_out_cb<4>().set("eeprom", FUNC(eeprom_serial_93cxx_device::di_write));   // EEPROM data
 	m_mainlatch->q_out_cb<5>().set("eeprom", FUNC(eeprom_serial_93cxx_device::clk_write));  // EEPROM serial clock
 	m_mainlatch->q_out_cb<6>().set("eeprom", FUNC(eeprom_serial_93cxx_device::cs_write));   // EEPROM chip select
@@ -2548,7 +2566,7 @@ void snowboar_state::snowboar(machine_config &config)
 	// video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(59.1);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	screen.set_size(64*16, 32*16);
@@ -2559,8 +2577,6 @@ void snowboar_state::snowboar(machine_config &config)
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_gaelco2);
 	PALETTE(config, m_palette).set_entries(0x10000);
-
-	MCFG_VIDEO_START_OVERRIDE(snowboar_state,gaelco2)
 
 	// sound hardware
 	SPEAKER(config, "speaker", 2).front();
@@ -2582,8 +2598,8 @@ void snowboar_state::maniacsqs(machine_config &config)
 	EEPROM_93C66_16BIT(config, m_eeprom);
 
 	LS259(config, m_mainlatch);
-	m_mainlatch->q_out_cb<0>().set(FUNC(snowboar_state::coin1_counter_w));
-	m_mainlatch->q_out_cb<1>().set(FUNC(snowboar_state::coin2_counter_w));
+	m_mainlatch->q_out_cb<0>().set(FUNC(snowboar_state::coin_counter_w<0>));
+	m_mainlatch->q_out_cb<1>().set(FUNC(snowboar_state::coin_counter_w<1>));
 	m_mainlatch->q_out_cb<4>().set("eeprom", FUNC(eeprom_serial_93cxx_device::di_write));   // EEPROM data
 	m_mainlatch->q_out_cb<5>().set("eeprom", FUNC(eeprom_serial_93cxx_device::clk_write));  // EEPROM serial clock
 	m_mainlatch->q_out_cb<6>().set("eeprom", FUNC(eeprom_serial_93cxx_device::cs_write));   // EEPROM chip select
@@ -2591,7 +2607,7 @@ void snowboar_state::maniacsqs(machine_config &config)
 	// video hardware
 	BUFFERED_SPRITERAM16(config, m_spriteram);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(59.1);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	screen.set_size(64*16, 32*16);
@@ -2602,8 +2618,6 @@ void snowboar_state::maniacsqs(machine_config &config)
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_gaelco2);
 	PALETTE(config, m_palette).set_entries(0x10000);
-
-	MCFG_VIDEO_START_OVERRIDE(snowboar_state,gaelco2)
 
 	// sound hardware
 	SPEAKER(config, "speaker", 2).front();
@@ -2879,8 +2893,8 @@ void wrally2_state::wrally2(machine_config &config)
 	config.set_perfect_quantum("gaelco_ds5002fp:mcu");
 
 	LS259(config, m_mainlatch); // IC6
-	m_mainlatch->q_out_cb<0>().set(FUNC(gaelco2_state::coin1_counter_w));
-	m_mainlatch->q_out_cb<1>().set(FUNC(gaelco2_state::coin2_counter_w));
+	m_mainlatch->q_out_cb<0>().set(FUNC(wrally2_state::coin_counter_w<0>));
+	m_mainlatch->q_out_cb<1>().set(FUNC(wrally2_state::coin_counter_w<1>));
 	m_mainlatch->q_out_cb<5>().set(FUNC(wrally2_state::wrally2_adc_clk));   // ADCs clock-in line
 	m_mainlatch->q_out_cb<6>().set(FUNC(wrally2_state::wrally2_adc_cs));    // ADCs chip select line
 
@@ -2890,7 +2904,7 @@ void wrally2_state::wrally2(machine_config &config)
 	PALETTE(config, m_palette).set_entries(0x10000);
 	config.set_default_layout(layout_dualhsxs);
 
-	screen_device &lscreen(SCREEN(config, "lscreen", SCREEN_TYPE_RASTER));
+	screen_device &lscreen(SCREEN(config, "lscreen"));
 	lscreen.set_refresh_hz(59.1);
 	lscreen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	lscreen.set_size(384, 32*16);
@@ -2898,7 +2912,7 @@ void wrally2_state::wrally2(machine_config &config)
 	lscreen.set_screen_update(FUNC(wrally2_state::screen_update_left));
 	lscreen.set_palette(m_palette);
 
-	screen_device &rscreen(SCREEN(config, "rscreen", SCREEN_TYPE_RASTER));
+	screen_device &rscreen(SCREEN(config, "rscreen"));
 	rscreen.set_refresh_hz(59.1);
 	rscreen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	rscreen.set_size(384, 32*16);
@@ -2906,8 +2920,6 @@ void wrally2_state::wrally2(machine_config &config)
 	rscreen.set_screen_update(FUNC(wrally2_state::screen_update_right));
 	rscreen.screen_vblank().set(m_spriteram, FUNC(buffered_spriteram16_device::vblank_copy_rising));
 	rscreen.set_palette(m_palette);
-
-	MCFG_VIDEO_START_OVERRIDE(wrally2_state,gaelco2_dual)
 
 	// sound hardware
 	/* the chip is stereo, but the game sound is mono because the right channel
@@ -3128,7 +3140,8 @@ ROM_START( wrally2 ) // Program ROMs from 31/Jul/1995, graphics ROMs from 14/Jun
 	ROM_LOAD16_BYTE( "dallas_usa_wr-2_1_63_usa_c584_31-7.bin", 0x000001, 0x080000, CRC(5c106494) SHA1(a8b93fad5b2e6d88b9a671ac44d7278abc8ea872) )
 
 	ROM_REGION( 0x8000, "gaelco_ds5002fp:sram", 0 ) // DS5002FP code
-	ROM_LOAD( "wrally2_ds5002fp_sram.bin", 0x00000, 0x8000, CRC(4c532e9e) SHA1(d0aad72b204d4abd3b8d7d5bbaf8d2d2f78edaa6) )
+	// 'bugfixed' version of DS5002FP code, from Gaelco's repair archives
+	ROM_LOAD( "wrally2_ds5002fp_sram_new.bin", 0x00000, 0x8000, CRC(bcf47f69) SHA1(8d2d5df2b2ed5ebc5c96241381ba687101dea834) )
 
 	ROM_REGION( 0x100, "gaelco_ds5002fp:mcu:internal", ROMREGION_ERASE00 )
 	// These are the default states stored in NVRAM
@@ -3167,7 +3180,9 @@ ROM_START( wrally2a ) // REF: 950510-1
 	ROM_LOAD16_BYTE( "wr2_63.ic63",  0x000001, 0x080000, CRC(94887c9f) SHA1(ad09f1fbeff4c3ba47f72346d261b22fa6a51457) )
 
 	ROM_REGION( 0x8000, "gaelco_ds5002fp:sram", 0 ) // DS5002FP code
-	ROM_LOAD( "wrally2_ds5002fp_sram.bin", 0x00000, 0x8000, CRC(4c532e9e) SHA1(d0aad72b204d4abd3b8d7d5bbaf8d2d2f78edaa6) )
+	// 'older' version of DS5002FP code, from Gaelco's repair archives
+	// very similar to dumped version, except 0xff fill instead of 0x00 and minor change to startup code
+	ROM_LOAD( "wrally2_ds5002fp_sram_old.bin", 0x00000, 0x8000, CRC(b0e25571) SHA1(9afc51d9366ee0ae0bc0818516fe1c5ac5c390b0) )
 
 	ROM_REGION( 0x100, "gaelco_ds5002fp:mcu:internal", ROMREGION_ERASE00 )
 	// These are the default states stored in NVRAM
@@ -3308,68 +3323,70 @@ ROM_END
 
 // Dates from Gaelco stickers on ROMs
 
-GAME( 1994, aligator,    0,         alighunt_d5002fp, alighunt, gaelco2_state,  init_alighunt,  ROT0, "Gaelco", "Alligator Hunt (World, protected, checksum 2B34128B)",      0 ) // 03/Jan/1995
-GAME( 1994, aligators,   aligator,  alighunt_d5002fp, alighunt, gaelco2_state,  init_alighunt,  ROT0, "Gaelco", "Alligator Hunt (Spain, protected, checksum 2B34128B)",      0 )
-GAME( 1994, aligatorun,  aligator,  alighunt,         alighunt, gaelco2_state,  init_alighunt,  ROT0, "Gaelco", "Alligator Hunt (unprotected, checksum F9C6891D)",           0 ) // 14/Mar
-GAME( 1994, aligatoruna, aligator,  alighunt,         alighunt, gaelco2_state,  init_alighunt,  ROT0, "Gaelco", "Alligator Hunt (unprotected, checksum 25A83609)",           0 ) // 21/Feb. Strange version, starts on space stages, but clearly a recompile not a trivial hack of the above, show version maybe?
-GAME( 1994, aligatorp,   aligator,  alighunt_d5002fp, alighunt, gaelco2_state,  empty_init,     ROT0, "Gaelco", "Alligator Hunt (protected, prototype?, checksum B975CB0B)", MACHINE_NOT_WORKING ) // requires different protection program / data
-GAME( 1994, lizardhunt,  aligator,  alighunt,         alighunt, gaelco2_state,  init_alighunt,  ROT0, "Gaelco", "Lizard Hunt (unprotected, checksum 25A83609)",              0 ) // 29/Mar. Same as 'aligatoruna', but with a single different byte to activate the alternate title screen
+GAME( 1994, aligator,    0,         alighunt_d5002fp, alighunt, gaelco2_state,      init_alighunt,  ROT0, "Gaelco", "Alligator Hunt (World, protected, checksum 2B34128B)",      0 ) // 03/Jan/1995
+GAME( 1994, aligators,   aligator,  alighunt_d5002fp, alighunt, gaelco2_state,      init_alighunt,  ROT0, "Gaelco", "Alligator Hunt (Spain, protected, checksum 2B34128B)",      0 )
+GAME( 1994, aligatorun,  aligator,  alighunt,         alighunt, gaelco2_state,      init_alighunt,  ROT0, "Gaelco", "Alligator Hunt (unprotected, checksum F9C6891D)",           0 ) // 14/Mar
+GAME( 1994, aligatoruna, aligator,  alighunt,         alighunt, gaelco2_state,      init_alighunt,  ROT0, "Gaelco", "Alligator Hunt (unprotected, checksum 25A83609)",           0 ) // 21/Feb. Strange version, starts on space stages, but clearly a recompile not a trivial hack of the above, show version maybe?
+GAME( 1994, aligatorp,   aligator,  alighunt_d5002fp, alighunt, gaelco2_state,      empty_init,     ROT0, "Gaelco", "Alligator Hunt (protected, prototype?, checksum B975CB0B)", MACHINE_NOT_WORKING ) // requires different protection program / data
+GAME( 1994, lizardhunt,  aligator,  alighunt,         alighunt, gaelco2_state,      init_alighunt,  ROT0, "Gaelco", "Lizard Hunt (unprotected, checksum 25A83609)",              0 ) // 29/Mar. Same as 'aligatoruna', but with a single different byte to activate the alternate title screen
 
-GAME( 1995, wrally2,     0,         wrally2,          wrally2,  wrally2_state,  empty_init,     ROT0, "Gaelco", "World Rally 2: Twin Racing (version 20-07, checksum B1B8)",                   0 ) // 31/Jul/1995 (but version 20/Jul on screen). Marked as "USA" internally at Gaelco.
-GAME( 1995, wrally2a,    wrally2,   wrally2,          wrally2,  wrally2_state,  init_wrally2,   ROT0, "Gaelco", "World Rally 2: Twin Racing (version 26-06, checksum 3EDB, mask ROM version)", 0 ) // 26/Jun/1995
-GAME( 1995, wrally2b,    wrally2,   wrally2,          wrally2,  wrally2_state,  empty_init,     ROT0, "Gaelco", "World Rally 2: Twin Racing (version 26-06, checksum 3EDB)",                   0 ) // 26/Jun/1995
-GAME( 1995, wrally2c,    wrally2,   wrally2,          wrally2,  wrally2_state,  empty_init,     ROT0, "Gaelco", "World Rally 2: Twin Racing (version 09-06, checksum 7BE1)",                   0 ) // 12/Jun/1995 (but version 09/Jun on screen)
-GAME( 1995, wrally2d,    wrally2,   wrally2,          wrally2,  wrally2_state,  empty_init,     ROT0, "Gaelco", "World Rally 2: Twin Racing (version 09-06, checksum 50A2)",                   MACHINE_IMPERFECT_SOUND ) // 09/Jun/1995
+GAME( 1995, wrally2,     0,         wrally2,          wrally2,  wrally2_state,      empty_init,     ROT0, "Gaelco", "World Rally 2: Twin Racing (version 20-07, checksum B1B8)",                   0 ) // 31/Jul/1995 (but version 20/Jul on screen). Marked as "USA" internally at Gaelco.
+GAME( 1995, wrally2a,    wrally2,   wrally2,          wrally2,  wrally2_state,      init_wrally2,   ROT0, "Gaelco", "World Rally 2: Twin Racing (version 26-06, checksum 3EDB, mask ROM version)", 0 ) // 26/Jun/1995
+GAME( 1995, wrally2b,    wrally2,   wrally2,          wrally2,  wrally2_state,      empty_init,     ROT0, "Gaelco", "World Rally 2: Twin Racing (version 26-06, checksum 3EDB)",                   0 ) // 26/Jun/1995
+GAME( 1995, wrally2c,    wrally2,   wrally2,          wrally2,  wrally2_state,      empty_init,     ROT0, "Gaelco", "World Rally 2: Twin Racing (version 09-06, checksum 7BE1)",                   0 ) // 12/Jun/1995 (but version 09/Jun on screen)
+GAME( 1995, wrally2d,    wrally2,   wrally2,          wrally2,  wrally2_state,      empty_init,     ROT0, "Gaelco", "World Rally 2: Twin Racing (version 09-06, checksum 50A2)",                   MACHINE_IMPERFECT_SOUND ) // 09/Jun/1995
 
-GAME( 1996, touchgo,     0,         touchgo_d5002fp,  touchgo,  gaelco2_state,  init_touchgo,   ROT0, "Gaelco", "Touch and Go (World, checksum 059D0235)",             0 ) // 05/Feb/1996
-GAME( 1995, touchgoa,    touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_state,  init_touchgo,   ROT0, "Gaelco", "Touch and Go (World, checksum 05A0C7FB)",             0 ) // 11/Dec/1995
-GAME( 1995, touchgona,   touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_state,  init_touchgo,   ROT0, "Gaelco", "Touch and Go (North America, checksum 05737572)",     0 ) // 14/Nov/1995
-GAME( 1995, touchgonna,  touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_state,  init_touchgo,   ROT0, "Gaelco", "Touch and Go (non North America, checksum 056533F0)", 0 ) // 16/Nov/1995
-GAME( 1995, touchgonnaa, touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_state,  init_touchgo,   ROT0, "Gaelco", "Touch and Go (non North America, checksum 056C2336)", 0 ) // 15/Nov/1995
-GAME( 1995, touchgonnab, touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_state,  init_touchgo,   ROT0, "Gaelco", "Touch and Go (non North America, checksum 056C138F)", 0 ) // 15/Nov/1995
-GAME( 1995, touchgonnac, touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_state,  init_touchgo,   ROT0, "Gaelco", "Touch and Go (non North America, checksum 056AA304)", 0 ) // 11/Nov/2005
-GAME( 1995, touchgoun,   touchgo,   touchgo,          touchgo,  gaelco2_state,  init_touchgo,   ROT0, "Gaelco", "Touch and Go (unprotected, checksum 059CC336)",       0 )
+GAME( 1996, touchgo,     0,         touchgo_d5002fp,  touchgo,  gaelco2_dual_state, init_touchgo,   ROT0, "Gaelco", "Touch and Go (World, checksum 059D0235)",             0 ) // 05/Feb/1996
+GAME( 1995, touchgoa,    touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_dual_state, init_touchgo,   ROT0, "Gaelco", "Touch and Go (World, checksum 05A0C7FB)",             0 ) // 11/Dec/1995
+GAME( 1995, touchgona,   touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_dual_state, init_touchgo,   ROT0, "Gaelco", "Touch and Go (North America, checksum 05737572)",     0 ) // 14/Nov/1995
+GAME( 1995, touchgonna,  touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_dual_state, init_touchgo,   ROT0, "Gaelco", "Touch and Go (non North America, checksum 056533F0)", 0 ) // 16/Nov/1995
+GAME( 1995, touchgonnaa, touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_dual_state, init_touchgo,   ROT0, "Gaelco", "Touch and Go (non North America, checksum 056C2336)", 0 ) // 15/Nov/1995
+GAME( 1995, touchgonnab, touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_dual_state, init_touchgo,   ROT0, "Gaelco", "Touch and Go (non North America, checksum 056C138F)", 0 ) // 15/Nov/1995
+GAME( 1995, touchgonnac, touchgo,   touchgo_d5002fp,  touchgo,  gaelco2_dual_state, init_touchgo,   ROT0, "Gaelco", "Touch and Go (non North America, checksum 056AA304)", 0 ) // 11/Nov/2005
+GAME( 1995, touchgoun,   touchgo,   touchgo,          touchgo,  gaelco2_dual_state, init_touchgo,   ROT0, "Gaelco", "Touch and Go (unprotected, checksum 059CC336)",       0 )
 
 // All sets identify as Version 1.0, but are clearly different revisions
-GAME( 1996, maniacsq,    0,         maniacsq,         maniacsq, gaelco2_state,  empty_init,     ROT0, "Gaelco", "Maniac Square (unprotected, version 1.0, checksum BB73)",               0 ) // 15/Jul/1996
-GAME( 1996, maniacsqa,   maniacsq,  maniacsq_d5002fp, maniacsq, gaelco2_state,  empty_init,     ROT0, "Gaelco", "Maniac Square (protected, version 1.0, checksum DEEE)",                 0 ) // 10/Jun/1996
-GAME( 1996, maniacsqb,   maniacsq,  maniacsq_d5002fp, maniacsq, gaelco2_state,  empty_init,     ROT0, "Gaelco", "Maniac Square (protected, version 1.0, checksum CF2D)",                 0 ) // 23/May/1996
-GAME( 1996, maniacsqc,   maniacsq,  maniacsq,         maniacsq, gaelco2_state,  empty_init,     ROT0, "Gaelco", "Maniac Square (unprotected, version 1.0, checksum BEAE)",               0 ) // 23/May/1996
-GAME( 1996, maniacsqs,   maniacsq,  maniacsqs,        snowboar, snowboar_state, empty_init,     ROT0, "Gaelco", "Maniac Square (unprotected, version 1.0, checksum 66B1, 960419/1 PCB)", 0 ) // Official version on Snow Board Championship PCB, doesn't use the protection
+GAME( 1996, maniacsq,    0,         maniacsq,         maniacsq, gaelco2_state,      empty_init,     ROT0, "Gaelco", "Maniac Square (unprotected, version 1.0, checksum BB73)",               0 ) // 15/Jul/1996
+GAME( 1996, maniacsqa,   maniacsq,  maniacsq_d5002fp, maniacsq, gaelco2_state,      empty_init,     ROT0, "Gaelco", "Maniac Square (protected, version 1.0, checksum DEEE)",                 0 ) // 10/Jun/1996
+GAME( 1996, maniacsqb,   maniacsq,  maniacsq_d5002fp, maniacsq, gaelco2_state,      empty_init,     ROT0, "Gaelco", "Maniac Square (protected, version 1.0, checksum CF2D)",                 0 ) // 23/May/1996
+GAME( 1996, maniacsqc,   maniacsq,  maniacsq,         maniacsq, gaelco2_state,      empty_init,     ROT0, "Gaelco", "Maniac Square (unprotected, version 1.0, checksum BEAE)",               0 ) // 23/May/1996
+GAME( 1996, maniacsqs,   maniacsq,  maniacsqs,        snowboar, snowboar_state,     empty_init,     ROT0, "Gaelco", "Maniac Square (unprotected, version 1.0, checksum 66B1, 960419/1 PCB)", 0 ) // Official version on Snow Board Championship PCB, doesn't use the protection
 
-GAME( 1997, snowboar,    0,         snowboar,         snowboar, snowboar_state, empty_init,     ROT0, "Gaelco / OMK", "Snow Board Championship (version 2.1)", 0 ) // 20/Mar, labeled internally at Gaelco as "DEMO STICK"
-GAME( 1996, snowboara,   snowboar,  snowboar,         snowboar, snowboar_state, init_snowboara, ROT0, "Gaelco / OMK", "Snow Board Championship (version 2.0)", 0 )
+GAME( 1997, snowboar,    0,         snowboar,         snowboar, snowboar_state,     empty_init,     ROT0, "Gaelco / OMK", "Snow Board Championship (version 2.1)", 0 ) // 20/Mar, labeled internally at Gaelco as "DEMO STICK"
+GAME( 1996, snowboara,   snowboar,  snowboar,         snowboar, snowboar_state,     init_snowboara, ROT0, "Gaelco / OMK", "Snow Board Championship (version 2.0)", 0 )
 
-GAME( 1998, bang,        0,         bang,             bang,     bang_state,     empty_init,     ROT0, "Gaelco / Bit Managers",                    "Bang! (version 2, checksum 140E)",              0 ) // 15/Feb/1999
-GAME( 1998, banga,       bang,      bang,             bang,     bang_state,     empty_init,     ROT0, "Gaelco / Bit Managers",                    "Bang! (version 2, checksum D35D)",              0 ) // 15/Feb/1999
-GAME( 1998, bangb,       bang,      bang,             bang,     bang_state,     empty_init,     ROT0, "Gaelco / Bit Managers",                    "Bang! (version 0, checksum B61D)",              0 )
-GAME( 1999, bangj,       bang,      bang,             bang,     bang_state,     empty_init,     ROT0, "Gaelco / Bit Managers (GM Shoji license)", "Gun Gabacho (Japan, version 2, checksum C6BB)", 0 )
-GAME( 1999, bangja,      bang,      bang,             bang,     bang_state,     empty_init,     ROT0, "Gaelco / Bit Managers (GM Shoji license)", "Gun Gabacho (Japan, version 2, checksum 1C8C)", 0 ) // 29/Apr/1999
-GAME( 1999, bangjb,      bang,      bang,             bang,     bang_state,     empty_init,     ROT0, "Gaelco / Bit Managers (GM Shoji license)", "Gun Gabacho (Japan, version 2, checksum B75B)", 0 ) // 23/Apr/1999
+GAME( 1998, bang,        0,         bang,             bang,     bang_state,         empty_init,     ROT0, "Gaelco / Bit Managers",                    "Bang! (version 2, checksum 140E)",              0 ) // 15/Feb/1999
+GAME( 1998, banga,       bang,      bang,             bang,     bang_state,         empty_init,     ROT0, "Gaelco / Bit Managers",                    "Bang! (version 2, checksum D35D)",              0 ) // 15/Feb/1999
+GAME( 1998, bangb,       bang,      bang,             bang,     bang_state,         empty_init,     ROT0, "Gaelco / Bit Managers",                    "Bang! (version 0, checksum B61D)",              0 )
+GAME( 1999, bangj,       bang,      bang,             bang,     bang_state,         empty_init,     ROT0, "Gaelco / Bit Managers (GM Shoji license)", "Gun Gabacho (Japan, version 2, checksum C6BB)", 0 )
+GAME( 1999, bangja,      bang,      bang,             bang,     bang_state,         empty_init,     ROT0, "Gaelco / Bit Managers (GM Shoji license)", "Gun Gabacho (Japan, version 2, checksum 1C8C)", 0 ) // 29/Apr/1999
+GAME( 1999, bangjb,      bang,      bang,             bang,     bang_state,         empty_init,     ROT0, "Gaelco / Bit Managers (GM Shoji license)", "Gun Gabacho (Japan, version 2, checksum B75B)", 0 ) // 23/Apr/1999
 
 
 // Hardware manufactured by Gaelco for Nova Desitec but without any Gaelco branding.
 
 // 2-in-1 gambling game, these are Italian versions, English versions also exist
-GAME( 1999, play2000,    0,         play2000,         play2000, gaelco2_state,  init_play2000,  ROT0, "Nova Desitec", "Play 2000 (Super Slot & Gran Tesoro) (v7.0i) (Italy)", 0 )
-GAME( 1999, play2000_50i,play2000,  play2000,         play2000, gaelco2_state,  empty_init,     ROT0, "Nova Desitec", "Play 2000 (Super Slot & Gran Tesoro) (v5.0i) (Italy)", MACHINE_NOT_WORKING ) // bad dump
-GAME( 1999, play2000_40i,play2000,  play2000,         play2000, gaelco2_state,  init_play2000,  ROT0, "Nova Desitec", "Play 2000 (Super Slot & Gran Tesoro) (v4.0i) (Italy)", 0 )
+GAME( 1999, play2000,    0,         play2000,         play2000, gaelco2_state,      init_play2000,  ROT0, "Nova Desitec", "Play 2000 (Super Slot & Gran Tesoro) (v7.0i) (Italy)", 0 )
+GAME( 1999, play2000_50i,play2000,  play2000,         play2000, gaelco2_state,      empty_init,     ROT0, "Nova Desitec", "Play 2000 (Super Slot & Gran Tesoro) (v5.0i) (Italy)", MACHINE_NOT_WORKING ) // bad dump
+GAME( 1999, play2000_40i,play2000,  play2000,         play2000, gaelco2_state,      init_play2000,  ROT0, "Nova Desitec", "Play 2000 (Super Slot & Gran Tesoro) (v4.0i) (Italy)", 0 )
 
-GAME( 1998, srollnd,     0,         srollnd,          play2000, gaelco2_state,  init_play2000,  ROT0, "Nova Desitec", "Super Roller (v7.0)",  MACHINE_NOT_WORKING ) // missing ds5002fp dump
+GAME( 1999, luckyclrs,   0,         play2000,         play2000, gaelco2_state,      init_luckyclrs, ROT0, "Nova Desitec", "Lucky Colors (v1.1i) (Italy)", MACHINE_NOT_WORKING ) // missing ds5002fp dump
 
-GAME( 1999, chmppool,    0,         srollnd,          play2000, gaelco2_state,  init_play2000,  ROT0, "Nova Desitec", "Champion Pool (v1.0)", MACHINE_NOT_WORKING ) // missing ds5002fp dump
+GAME( 1998, srollnd,     0,         srollnd,          play2000, gaelco2_state,      init_play2000,  ROT0, "Nova Desitec", "Super Roller (v7.0)",  MACHINE_NOT_WORKING ) // missing ds5002fp dump
 
-GAME( 1999, jungleani,   0,         srollnd,          play2000, gaelco2_state,  init_play2000,  ROT0, "New Impeuropex Corp. / New Chitarrina", "Jungle's Animals (v3.0)", MACHINE_NOT_WORKING ) // Developed by Nova Desitec, missing ds5002fp dump
+GAME( 1999, chmppool,    0,         srollnd,          play2000, gaelco2_state,      init_play2000,  ROT0, "Nova Desitec", "Champion Pool (v1.0)", MACHINE_NOT_WORKING ) // missing ds5002fp dump
+
+GAME( 1999, jungleani,   0,         srollnd,          play2000, gaelco2_state,      init_play2000,  ROT0, "New Impeuropex Corp. / New Chitarrina", "Jungle's Animals (v3.0)", MACHINE_NOT_WORKING ) // Developed by Nova Desitec, missing ds5002fp dump
 
 
 /* Gym equipment.
    Pro Reclimber Tele Cardioline has the same PCB and ROMs as Pro Cycle Tele Cardioline.
    There are other devices in Cardioline series but they don't use displays and aren't on Gaelco hardware. */
 
-GAME( 2000, sltpcycl,   0,          saltcrdi,         saltcrdi, gaelco2_state,  init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Cycle Tele Cardioline (Salter fitness bike, V.1.0, checksum 02AB)",      0 ) // 18/Jan/2000
-GAME( 1999, sltpcycla,  sltpcycl,   saltcrdi,         saltcrdi, gaelco2_state,  init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Cycle Tele Cardioline (Salter fitness bike, V.1.0, checksum DECA)",      0 ) // 20/Nov/1999
-GAME( 1997, sltpcyclb,  sltpcycl,   saltcrdi,         saltcrdi, gaelco2_state,  init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Cycle Tele Cardioline (Salter fitness bike, V.1.0, checksum 3523)",      0 ) // 07/Apr/1997
-GAME( 199?, sltpcyclc,  sltpcycl,   saltcrdi,         saltcrdi, gaelco2_state,  init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Cycle Tele Cardioline (Salter fitness bike, unknown version)",           MACHINE_NOT_WORKING ) // missing GFX ROMs
+GAME( 2000, sltpcycl,   0,          saltcrdi,         saltcrdi, gaelco2_state,      init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Cycle Tele Cardioline (Salter fitness bike, V.1.0, checksum 02AB)",      0 ) // 18/Jan/2000
+GAME( 1999, sltpcycla,  sltpcycl,   saltcrdi,         saltcrdi, gaelco2_state,      init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Cycle Tele Cardioline (Salter fitness bike, V.1.0, checksum DECA)",      0 ) // 20/Nov/1999
+GAME( 1997, sltpcyclb,  sltpcycl,   saltcrdi,         saltcrdi, gaelco2_state,      init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Cycle Tele Cardioline (Salter fitness bike, V.1.0, checksum 3523)",      0 ) // 07/Apr/1997
+GAME( 199?, sltpcyclc,  sltpcycl,   saltcrdi,         saltcrdi, gaelco2_state,      init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Cycle Tele Cardioline (Salter fitness bike, unknown version)",           MACHINE_NOT_WORKING ) // missing GFX ROMs
 
-GAME( 1998, sltpstep,   0,          saltcrdi,         saltcrdi, gaelco2_state,  init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Stepper Tele Cardioline (Salter fitness stepper, V.1.0, checksum 2B83)", 0 ) // 23/Jan/1998
-GAME( 1997, sltpstepa,  sltpstep,   saltcrdi,         saltcrdi, gaelco2_state,  init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Stepper Tele Cardioline (Salter fitness stepper, V.1.0, checksum F208)", 0 ) // 07/Apr/1997
+GAME( 1998, sltpstep,   0,          saltcrdi,         saltcrdi, gaelco2_state,      init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Stepper Tele Cardioline (Salter fitness stepper, V.1.0, checksum 2B83)", 0 ) // 23/Jan/1998
+GAME( 1997, sltpstepa,  sltpstep,   saltcrdi,         saltcrdi, gaelco2_state,      init_play2000,  ROT0, "Salter Fitness / Gaelco", "Pro Stepper Tele Cardioline (Salter fitness stepper, V.1.0, checksum F208)", 0 ) // 07/Apr/1997

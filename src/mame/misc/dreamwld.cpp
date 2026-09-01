@@ -105,7 +105,7 @@ Stephh's notes (based on the game M68EC020 code and some tests) :
 
 #include "emu.h"
 #include "cpu/m68000/m68020.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i80c52.h"
 #include "sound/okim6295.h"
 #include "emupal.h"
 #include "screen.h"
@@ -809,7 +809,7 @@ void dreamwld_state::baryon(machine_config &config)
 	//config.set_perfect_quantum(m_maincpu);
 
 	/* video hardware */
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(57.793);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500));
 	screen.set_size(512,256);

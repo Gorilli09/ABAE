@@ -28,7 +28,7 @@
 #include "artmagic.h"
 
 #include "cpu/m68000/m68000.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i80c51.h"
 #include "cpu/tms34010/tms34010.h"
 #include "machine/eeprompar.h"
 #include "machine/mc68681.h"
@@ -508,7 +508,7 @@ void artmagic_state::shtstar_guncpu_map(address_map &map)
 	map(0x0000, 0x7fff).rom();
 }
 
-void artmagic_state::shtstar_guncpu_io_map(address_map &map)
+void artmagic_state::shtstar_guncpu_data_map(address_map &map)
 {
 	map(0xc000, 0xcfff).ram();
 }
@@ -827,7 +827,7 @@ void artmagic_state::artmagic(machine_config &config)
 	/* video hardware */
 	TLC34076(config, m_tlc34076, tlc34076_device::TLC34076_6_BIT);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(MASTER_CLOCK_40MHz/6, 428, 0, 320, 313, 0, 256);
 	screen.set_screen_update("tms", FUNC(tms34010_device::tms340x0_rgb32));
 
@@ -884,7 +884,7 @@ void artmagic_state::shtstar(machine_config &config)
 	/*gun board cpu*/
 	i80c31_device &guncpu(I80C31(config, "guncpu", 6000000));
 	guncpu.set_addrmap(AS_PROGRAM, &artmagic_state::shtstar_guncpu_map);
-	guncpu.set_addrmap(AS_IO, &artmagic_state::shtstar_guncpu_io_map);
+	guncpu.set_addrmap(AS_DATA, &artmagic_state::shtstar_guncpu_data_map);
 	guncpu.port_in_cb<1>().set_constant(0); // ?
 }
 

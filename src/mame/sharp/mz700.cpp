@@ -364,7 +364,7 @@ void mz_state::mz700(machine_config &config)
 	ADDRESS_MAP_BANK(config, "banke").set_map(&mz_state::mz700_banke).set_options(ENDIANNESS_LITTLE, 8, 16, 0x2000);
 
 	/* video hardware */
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(XTAL(17'734'470)/2, 568, 0, 40*8, 312, 0, 25*8);
 	m_screen->set_screen_update(FUNC(mz_state::screen_update_mz700));
 	m_screen->set_palette(m_palette);
@@ -403,6 +403,7 @@ void mz_state::mz700(machine_config &config)
 	m_cassette->set_interface("mz_cass");
 
 	SOFTWARE_LIST(config, "cass_list").set_original("mz700_cass");
+	SOFTWARE_LIST(config, "cass_list_80k").set_compatible("mz80k_cass");
 
 	/* internal ram */
 	RAM(config, RAM_TAG).set_default_size("64K");
@@ -428,6 +429,7 @@ void mz800_state::mz800(machine_config &config)
 
 	config.device_remove("cass_list");
 	SOFTWARE_LIST(config, "cass_list").set_original("mz800_cass");
+	SOFTWARE_LIST(config, "cass_list_700").set_compatible("mz700_cass");
 
 	/* devices */
 	m_pit->set_clk<0>(XTAL(17'734'470)/16);

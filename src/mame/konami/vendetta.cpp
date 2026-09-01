@@ -144,7 +144,7 @@ private:
 	// video-related
 	uint8_t m_layer_colorbase[3]{};
 	uint8_t m_sprite_colorbase = 0;
-	int m_layerpri[3]{};
+	int32_t m_layerpri[3]{};
 
 	// misc
 	uint8_t m_irq_enabled = 0;
@@ -200,14 +200,14 @@ private:
 
 K052109_CB_MEMBER(vendetta_state::vendetta_tile_callback)
 {
-	*code |= ((*color & 0x03) << 8) | ((*color & 0x30) << 6) | ((*color & 0x0c) << 10) | (bank << 14);
-	*color = m_layer_colorbase[layer] + ((*color & 0xc0) >> 6);
+	code |= ((color & 0x03) << 8) | ((color & 0x30) << 6) | ((color & 0x0c) << 10) | (bank << 14);
+	color = m_layer_colorbase[layer] + ((color & 0xc0) >> 6);
 }
 
 K052109_CB_MEMBER(vendetta_state::esckids_tile_callback)
 {
-	*code |= ((*color & 0x03) << 8) | ((*color & 0x10) << 6) | ((*color & 0x0c) <<  9) | (bank << 13);
-	*color = m_layer_colorbase[layer] + ((*color & 0xe0) >>  5);
+	code |= ((color & 0x03) << 8) | ((color & 0x10) << 6) | ((color & 0x0c) <<  9) | (bank << 13);
+	color = m_layer_colorbase[layer] + ((color & 0xe0) >>  5);
 }
 
 
@@ -219,17 +219,17 @@ K052109_CB_MEMBER(vendetta_state::esckids_tile_callback)
 
 K053246_CB_MEMBER(vendetta_state::sprite_callback)
 {
-	int pri = (*color & 0x03e0) >> 4; // ???????
+	int pri = (color & 0x03e0) >> 4; // ???????
 	if (pri <= m_layerpri[2])
-		*priority_mask = 0;
+		priority_mask = 0;
 	else if (pri > m_layerpri[2] && pri <= m_layerpri[1])
-		*priority_mask = 0xf0;
+		priority_mask = 0xf0;
 	else if (pri > m_layerpri[1] && pri <= m_layerpri[0])
-		*priority_mask = 0xf0 | 0xcc;
+		priority_mask = 0xf0 | 0xcc;
 	else
-		*priority_mask = 0xf0 | 0xcc | 0xaa;
+		priority_mask = 0xf0 | 0xcc | 0xaa;
 
-	*color = m_sprite_colorbase + (*color & 0x001f);
+	color = m_sprite_colorbase + (color & 0x001f);
 }
 
 
@@ -356,7 +356,7 @@ void vendetta_state::z80_nmi_w(int state)
 
 void vendetta_state::z80_irq_w(uint8_t data)
 {
-	m_audiocpu->set_input_line_and_vector(0, HOLD_LINE, 0xff); // Z80
+	m_audiocpu->set_input_line(0, HOLD_LINE); // Z80 IM1
 }
 
 uint8_t vendetta_state::z80_irq_r()
@@ -607,7 +607,6 @@ void vendetta_state::machine_reset()
 
 	// Z80 _NMI goes low at same time as reset
 	m_audiocpu->set_input_line(INPUT_LINE_NMI, ASSERT_LINE);
-	m_audiocpu->pulse_input_line(INPUT_LINE_RESET, attotime::zero);
 }
 
 void vendetta_state::banking_callback(uint8_t data)
@@ -633,7 +632,7 @@ void vendetta_state::vendetta(machine_config &config)
 	WATCHDOG_TIMER(config, "watchdog");
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(24_MHz_XTAL / 4, 384, 0+8, 320-8, 264, 16, 240); // measured 59.17
 	m_screen->set_screen_update(FUNC(vendetta_state::screen_update));
 	m_screen->set_palette(m_palette);
@@ -652,8 +651,8 @@ void vendetta_state::vendetta(machine_config &config)
 	m_k053246->set_config(NORMAL_PLANE_ORDER, -43, 6);
 	m_k053246->set_palette(m_palette);
 
-	K053251(config, m_k053251, 0);
-	K054000(config, m_k054000, 0);
+	K053251(config, m_k053251);
+	K054000(config, m_k054000);
 
 	// sound hardware
 	SPEAKER(config, "speaker", 2).front();

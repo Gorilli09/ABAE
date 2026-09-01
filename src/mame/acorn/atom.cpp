@@ -219,8 +219,8 @@ public:
 	void atombbc(machine_config &config);
 
 protected:
-	void machine_start() override ATTR_COLD;
-	void machine_reset() override ATTR_COLD;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	memory_view m_mode;
@@ -242,7 +242,7 @@ public:
 	void atomes(machine_config &config);
 
 protected:
-	void machine_reset() override;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_ioport m_cfg_mode;
@@ -271,7 +271,7 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER( clock_boost );
 
 protected:
-	void machine_start() override ATTR_COLD;
+	 virtual void machine_start() override ATTR_COLD;
 
 private:
 	memory_share_creator<uint8_t> m_ram;
@@ -1103,11 +1103,8 @@ void prophet_state::machine_reset()
 {
 	atom_state::machine_reset();
 
-	if (m_cfg_mode->read())
-	{
-		/* Autoboot into ROM */
-		m_maincpu->set_input_line(M6502_IRQ_LINE, ASSERT_LINE);
-	}
+	/* Autoboot into ROM */
+	m_maincpu->set_input_line(M6502_IRQ_LINE, m_cfg_mode->read() ? ASSERT_LINE : CLEAR_LINE);
 }
 
 
@@ -1145,7 +1142,9 @@ void atom_state::atom_base(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &atom_state::atom_mem);
 	config.set_perfect_quantum(m_maincpu); // required for Tube interface
 
-	SCREEN(config, "screen", SCREEN_TYPE_RASTER);
+	screen_device &screen(SCREEN(config, "screen"));
+	screen.set_raw(XTAL(3'579'545) * 2, 456, 0, 372, 262, 0, 243);
+	screen.set_screen_update("vdg", FUNC(mc6847_base_device::screen_update));
 
 	MC6847(config, m_vdg, 3.579545_MHz_XTAL);
 	m_vdg->input_callback().set(FUNC(atom_state::vdg_videoram_r));

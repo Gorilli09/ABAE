@@ -13,7 +13,7 @@
 #include "rmnimbus.h"
 #include "rmnkbd.h"
 
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8051.h"
 #include "imagedev/floppy.h"
 
 #include "bus/isa/fdc.h"
@@ -105,7 +105,7 @@ void rmnimbus_state::nimbus_iocpu_mem(address_map &map)
 	map(0x0000, 0x1fff).rom();
 }
 
-void rmnimbus_state::nimbus_iocpu_io(address_map &map)
+void rmnimbus_state::nimbus_iocpu_data(address_map &map)
 {
 	map.unmap_value_high();
 	map(0x00000, 0x000FF).rw(FUNC(rmnimbus_state::nimbus_pc8031_iou_r), FUNC(rmnimbus_state::nimbus_pc8031_iou_w));
@@ -123,14 +123,14 @@ void rmnimbus_state::nimbus(machine_config &config)
 
 	I8031(config, m_iocpu, 11059200);
 	m_iocpu->set_addrmap(AS_PROGRAM, &rmnimbus_state::nimbus_iocpu_mem);
-	m_iocpu->set_addrmap(AS_IO, &rmnimbus_state::nimbus_iocpu_io);
+	m_iocpu->set_addrmap(AS_DATA, &rmnimbus_state::nimbus_iocpu_data);
 	m_iocpu->port_in_cb<1>().set(FUNC(rmnimbus_state::nimbus_pc8031_port1_r));
 	m_iocpu->port_out_cb<1>().set(FUNC(rmnimbus_state::nimbus_pc8031_port1_w));
 	m_iocpu->port_in_cb<3>().set(FUNC(rmnimbus_state::nimbus_pc8031_port3_r));
 	m_iocpu->port_out_cb<3>().set(FUNC(rmnimbus_state::nimbus_pc8031_port3_w));
 
 	/* video hardware */
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(4.433619_MHz_XTAL * 2, 650, 0, 640, 260, 0, 250);
 	m_screen->set_screen_update(FUNC(rmnimbus_state::screen_update_nimbus));
 	//m_screen->set_video_attributes(VIDEO_UPDATE_SCANLINE);

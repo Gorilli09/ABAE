@@ -1,5 +1,6 @@
 // license:BSD-3-Clause
 // copyright-holders:Andrei I. Holub
+// thanks-to:Blade, TolikTrek, RomanRom2
 /*******************************************************************************************
 
 Sprinter Sp2000 (Peters Plus Ltd)
@@ -30,7 +31,6 @@ Following manual configuration adjustments are recommended for better experience
 - CDROM CDDA Sound is only connected to ata1:1
 - Input Settings > Keyboard Selection >
         Microsoft Natural Keyboard [root:kbd:ms_naturl]: Enabled
-- Use '-rs232 microsoft_mouse'
 - Input Settings > Input Assignments (this system) > Microsoft 2-Button Serial Mouse (HLE) [root:rs232:microsoft_mouse]
         Mouse X 3 Analog:                                Mouse X    (MOUSECODE_1_XAXIS)
         Mouse X 3 Analog Inc:                            Mouse X -  (MOUSECODE_1_XAXIS_NEG_SWITCH)
@@ -69,6 +69,9 @@ TODO:
 
 #include "speaker.h"
 #include "tilemap.h"
+
+#include <algorithm>
+#include <iterator>
 
 #include "sprinter.lh"
 
@@ -172,24 +175,24 @@ private:
 		ACCEL_ON
 	};
 
-	static constexpr XTAL X_SP                 = 42_MHz_XTAL; // TODO X1 after spectrumless
+	static inline constexpr XTAL X_SP                 = 42_MHz_XTAL; // TODO X1 after spectrumless
 
-	static constexpr u16  SPRINT_WIDTH         = 896;
-	static constexpr u16  SPRINT_BORDER_RIGHT  = 48;
-	static constexpr u16  SPRINT_SCREEN_XSIZE  = 640;
-	static constexpr u16  SPRINT_BORDER_LEFT   = 48;
-	static constexpr u16  SPRINT_XVIS          = SPRINT_BORDER_RIGHT + SPRINT_SCREEN_XSIZE + SPRINT_BORDER_LEFT;
+	static inline constexpr u16  SPRINT_WIDTH         = 896;
+	static inline constexpr u16  SPRINT_BORDER_RIGHT  = 48;
+	static inline constexpr u16  SPRINT_SCREEN_XSIZE  = 640;
+	static inline constexpr u16  SPRINT_BORDER_LEFT   = 48;
+	static inline constexpr u16  SPRINT_XVIS          = SPRINT_BORDER_RIGHT + SPRINT_SCREEN_XSIZE + SPRINT_BORDER_LEFT;
 
-	static constexpr u16  SPRINT_HEIGHT        = 320;
-	static constexpr u16  SPRINT_BORDER_TOP    = 16;
-	static constexpr u16  SPRINT_SCREEN_YSIZE  = 256;
-	static constexpr u16  SPRINT_BORDER_BOTTOM = 16;
-	static constexpr u16  SPRINT_YVIS          = SPRINT_BORDER_TOP + SPRINT_SCREEN_YSIZE + SPRINT_BORDER_BOTTOM;
+	static inline constexpr u16  SPRINT_HEIGHT        = 320;
+	static inline constexpr u16  SPRINT_BORDER_TOP    = 16;
+	static inline constexpr u16  SPRINT_SCREEN_YSIZE  = 256;
+	static inline constexpr u16  SPRINT_BORDER_BOTTOM = 16;
+	static inline constexpr u16  SPRINT_YVIS          = SPRINT_BORDER_TOP + SPRINT_SCREEN_YSIZE + SPRINT_BORDER_BOTTOM;
 
-	static constexpr u16 BANK_RAM_MASK         = 1 << 8;
-	static constexpr u16 BANK_FASTRAM_MASK     = 1 << 9;
-	static constexpr u16 BANK_ISA_MASK         = 1 << 10;
-	static constexpr u16 BANK_WRDISBL_MASK     = 1 << 12;
+	static inline constexpr u16 BANK_RAM_MASK         = 1 << 8;
+	static inline constexpr u16 BANK_FASTRAM_MASK     = 1 << 9;
+	static inline constexpr u16 BANK_ISA_MASK         = 1 << 10;
+	static inline constexpr u16 BANK_WRDISBL_MASK     = 1 << 12;
 
 	bool acc_ena()     const { return BIT(m_all_mode, 0); }
 	bool cbl_mode()    const { return BIT(m_cbl_xx, 7); }
@@ -387,7 +390,7 @@ void sprinter_state::update_cpu()
 void sprinter_state::update_video(bool is312)
 {
 	const u16 vtotal = SPRINT_HEIGHT - (8 * is312);
-	m_screen->configure(SPRINT_WIDTH, vtotal, m_screen->visible_area(), HZ_TO_ATTOSECONDS(X_SP / 3) * SPRINT_WIDTH * vtotal);
+	m_screen->configure(SPRINT_WIDTH, vtotal, m_screen->visible_area(), attotime::from_ticks(SPRINT_WIDTH * vtotal, X_SP / 3));
 	update_int(true);
 }
 
@@ -578,7 +581,7 @@ u8 sprinter_state::dcp_r(offs_t offset)
 		do_mem_wait(4);
 	}
 
-	const u16 dcp_offset = (BIT(m_cnf, 3, 2) << 12) | (0 << 11) | (m_dos << 10) | (1 << 9) | (BIT(offset, 14, 2) << 7) | (BIT(offset, 13) << 4) | (BIT(offset, 7) << 3) | (offset & 0x67);
+	const u16 dcp_offset = (BIT(m_cnf, 3, 2) << 12) | (BIT(m_pn, 5) << 11) | (m_dos << 10) | (1 << 9) | (BIT(offset, 14, 2) << 7) | (BIT(offset, 13) << 4) | (BIT(offset, 7) << 3) | (offset & 0x67);
 	const u8 dcpp = m_dcp_location[dcp_offset];
 	u8 data = 0xff;
 	switch (dcpp)
@@ -700,7 +703,7 @@ void sprinter_state::dcp_w(offs_t offset, u8 data)
 	}
 	do_mem_wait(4);
 
-	const u16 dcp_offset = (BIT(m_cnf, 3, 2) << 12) | (0 << 11) | (m_dos << 10) | (0 << 9) | (BIT(offset, 14, 2) << 7) | (BIT(offset, 13) << 4) | (BIT(offset, 7) << 3) | (offset & 0x67);
+	const u16 dcp_offset = (BIT(m_cnf, 3, 2) << 12) | (BIT(m_pn, 5) << 11) | (m_dos << 10) | (0 << 9) | (BIT(offset, 14, 2) << 7) | (BIT(offset, 13) << 4) | (BIT(offset, 7) << 3) | (offset & 0x67);
 	const u8 dcpp = m_dcp_location[dcp_offset];
 	if ((dcpp >= 0xc0) && (dcpp < 0xf0))
 		m_ram_pages[dcpp - 0xc0] = data;
@@ -826,14 +829,15 @@ void sprinter_state::dcp_w(offs_t offset, u8 data)
 	case 0xc0: // 1FFD
 	case 0xc8:
 		m_sc = data;
-		if (BIT(m_cnf, 6)) m_sc = 0;      // CNF_SC_RESET
+		if (BIT(m_cnf, 6)) m_sc = 0; // CNF_SC_CLEAN
 		update_memory();
 		break;
 	case 0xc1: // 7FFD
 	case 0xc9:
 		m_pn = data;
-		if (BIT(m_cnf, 5)) m_pn &= 0xc0;  // CNF_PN[5..0]_RESET
-		if (BIT(~m_cnf, 7)) m_pn &= 0x1f; // CNF_PN[7..6]_RESET
+		if (BIT(~m_cnf, 7)) m_pn &= 0x3f; // CNF_PN[7..6]_CLEAN
+		if (BIT(~m_cnf, 7) && BIT(m_cnf, 5)) m_pn &= 0xdf; // CNF_PN[5]_CLEAN
+		if (BIT(m_cnf, 5)) m_pn &= 0xe0;  // CNF_PN[4..0]_CLEAN
 		update_memory();
 		break;
 	case 0xc2:
@@ -871,9 +875,10 @@ void sprinter_state::dcp_w(offs_t offset, u8 data)
 		if (BIT(data, 2))
 		{
 			m_cnf = data;
-			if (BIT(m_cnf, 5)) m_pn &= 0xc0;  // CNF_PN[5..0]_RESET
-			if (BIT(m_cnf, 6)) m_sc = 0;      // CNF_SC_RESET
-			if (BIT(~m_cnf, 7)) m_pn &= 0x1f; // CNF_PN[7..6]_RESET
+			if (BIT(m_cnf, 6)) m_sc = 0;      // CNF_SC_CLEAN
+			if (BIT(~m_cnf, 7)) m_pn &= 0x3f; // CNF_PN[7..6]_CLEAN
+			if (BIT(~m_cnf, 7) && BIT(m_cnf, 5)) m_pn &= 0xdf; // CNF_PN[5]_CLEAN
+			if (BIT(m_cnf, 5)) m_pn &= 0xe0;  // CNF_PN[4..0]_CLEAN
 		}
 
 		update_memory();
@@ -1021,7 +1026,7 @@ void sprinter_state::check_accel(bool is_read, offs_t offset, u8 &data)
 			if (BIT(m_acc_dir, 2)) // block operation
 			{
 				// fastram doesn't apply waits, hence m_wait_cycles_count is not updated
-				if (is_read && ~(m_pages[BIT(offset, 14, 2)] & BANK_FASTRAM_MASK))
+				if (is_read && (~m_pages[BIT(offset, 14, 2)] & BANK_FASTRAM_MASK))
 					m_maincpu->adjust_icount(m_wait_ticks_count);
 
 				m_maincpu->set_input_line(Z80_INPUT_LINE_WAIT, ASSERT_LINE);
@@ -1175,6 +1180,8 @@ template <u8 Bank> u8 sprinter_state::ram_r(offs_t offset)
 template <u8 Bank> void sprinter_state::ram_w(offs_t offset, u8 data)
 {
 	static_assert(Bank < 4, "unexpected bank number");
+	if (m_access_state == ACCEL_GO)
+		return;
 
 	do_mem_wait(3);
 
@@ -1185,11 +1192,16 @@ template <u8 Bank> void sprinter_state::ram_w(offs_t offset, u8 data)
 
 	if ((page & 0xf0) == 0x50)
 	{
+		const bool transparent = BIT(page, 3);
+		if (transparent && (data == 0xff))
+			return;
+
 		const u32 vaddr = m_port_y * 1024 + (offset & 0x3ff);
-		if (BIT(~page, 2))
+		const bool vram_only = BIT(page, 2);
+		if (!vram_only)
 			m_ram->pointer()[(0x50 << 14) + vaddr] = data;
-		if (!(BIT(page, 3) && (data == 0xff)))
-			vram_w(vaddr, data);
+
+		vram_w(vaddr, data);
 	}
 	else
 	{
@@ -1429,6 +1441,21 @@ void sprinter_state::init_taps()
 			check_accel(false, offset, data);
 		}
 	});
+
+	m_maincpu->space(AS_IO).install_write_tap(0x0000, 0xffff, "cpu_io_w", [this](offs_t offset, u8 &data, u8 mem_mask)
+	{
+		// Internal z84 ports are not accessible through IO map, hence they need special case here
+		// Keep these in ascending order
+		constexpr u8 z84_int[] = {
+			0x10, 0x11, 0x12, 0x13,
+			0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+			0xee, 0xef,
+			0xf0, 0xf1, 0xf4
+		};
+		const auto found = std::lower_bound(std::begin(z84_int), std::end(z84_int), offset);
+		if ((found != std::end(z84_int)) && (*found == offset))
+			dcp_w(offset, data);
+	});
 }
 
 void sprinter_state::machine_start()
@@ -1437,8 +1464,6 @@ void sprinter_state::machine_start()
 	m_isa[1]->space(isa8_device::AS_ISA_IO).unmap_value_high();
 
 	spectrum_128_state::machine_start();
-
-	m_turbo_led.resolve();
 
 	save_item(NAME(m_ram_pages));
 	save_item(NAME(m_pages));
@@ -1943,15 +1968,15 @@ void sprinter_state::sprinter(machine_config &config)
 	m_ata[0]->slot(1).set_option_machine_config("cdrom", cdrom_config);
 	ATA_INTERFACE(config, m_ata[1]).options(sprinter_ata_devices, "hdd", "hdd", false);
 
-	BETA_DISK(config, m_beta, 0);
+	BETA_DISK(config, m_beta);
 
 	ISA8(config, m_isa[0], X_SP / 5);
 	m_isa[0]->set_custom_spaces();
-	ISA8_SLOT(config, "isa0", 0, m_isa[0], pc_isa8_cards, "zxbus_adapter", false);
+	ISA8_SLOT(config, "isa0", 0, m_isa[0], pc_isa8_cards, "zxbus_adapter", false); // FIXME: determine ISA bus clock
 
 	ISA8(config, m_isa[1], X_SP / 5);
 	m_isa[1]->set_custom_spaces();
-	ISA8_SLOT(config, "isa1", 0, m_isa[1], pc_isa8_cards, nullptr, false);
+	ISA8_SLOT(config, "isa1", 0, m_isa[1], pc_isa8_cards, nullptr, false); // FIXME: determine ISA bus clock
 
 	m_screen->set_raw(X_SP / 3, SPRINT_WIDTH, SPRINT_HEIGHT, { 0, SPRINT_XVIS - 1, 0, SPRINT_YVIS - 1 });
 	m_screen->set_screen_update(FUNC(sprinter_state::screen_update));

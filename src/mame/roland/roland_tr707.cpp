@@ -421,16 +421,34 @@ void tr707_audio_device::voice_trigger_w(u16 data)
 	m_mac->xst_w(m_triggers & 0xff);
 
 	// The EG capacitors for all triggered voices will charge through a
-	// single 100 Ohm resistor (R79). If more than one voice is triggered,
-	// there will be multiple capacitors charging in parallel. Treat that
-	// parallel capacitance as the effective capacitance of each triggered EG.
+	// single 100 Ohm resistor (R79). R79 will form a voltage divider with the
+	// (much larger) discharge resistor, whch will slighty affect the target
+	// voltage and charge speed. If more than one voice is triggered, there will
+	// be multiple capacitors and multiple discharge resistors connected to R79.
+	// So the effective capacitance and discharge resistance of each EG will be
+	// the parallel combination of those of individual EGs.
 	double effective_charge_c = 0;
+	double effective_discharge_r_inv = 0;
 	for (int i = 0; i < MV_COUNT; ++i)
+	{
 		if (!BIT(m_triggers, i))
+		{
 			effective_charge_c += MUX_EG_C[i];
+			effective_discharge_r_inv += 1.0 / m_mux_eg_r[i];
+		}
+	}
 	for (int i = 0; i < CV_COUNT; ++i)
+	{
 		if (!BIT(m_triggers, 8 + i))
+		{
 			effective_charge_c += CYMBAL_EG_C[i];
+			effective_discharge_r_inv += 1.0 / m_cymbal_eg_r[i];
+		}
+	}
+
+	// This will evaluate to Inf if there is no voice triggered. That's OK,
+	// because it won't be used in that case.
+	const double effective_discharge_r = 1.0 / effective_discharge_r_inv;
 
 	// Trigger amplitude EGs for MUX voices.
 	for (int i = 0; i < MV_COUNT; ++i)
@@ -439,14 +457,14 @@ void tr707_audio_device::voice_trigger_w(u16 data)
 		if (!BIT(m_triggers, i))  // EG attack
 		{
 			// When the trigger is active, the EG capacitor will be connected
-			// to both: the discharge resistor to ground (m_mux_eg_r[i]) and the
+			// to both: the effective discharge resistor to ground and the
 			// resistor to the accent voltage (R79) via a transistor. This setup
 			// affects the effective resistance and target voltage of the RC
 			// circuit as per the equations below. The effect of the transistor
 			// in the charge path is not modelled.
-			eg->set_r(RES_2_PARALLEL(R79, m_mux_eg_r[i]));
+			eg->set_r(RES_2_PARALLEL(R79, effective_discharge_r));
 			eg->set_c(effective_charge_c);
-			eg->set_target_v(m_accent_level * RES_VOLTAGE_DIVIDER(R79, m_mux_eg_r[i]));
+			eg->set_target_v(m_accent_level * RES_VOLTAGE_DIVIDER(R79, effective_discharge_r));
 		}
 		else  // EG release
 		{
@@ -471,9 +489,9 @@ void tr707_audio_device::voice_trigger_w(u16 data)
 		if (!BIT(m_triggers, trigger_index))  // EG attack
 		{
 			// See comments for MUX voice triggering above.
-			eg->set_r(RES_2_PARALLEL(R79, m_cymbal_eg_r[i]));
+			eg->set_r(RES_2_PARALLEL(R79, effective_discharge_r));
 			eg->set_c(effective_charge_c);
-			eg->set_target_v(m_accent_level * RES_VOLTAGE_DIVIDER(R79, m_cymbal_eg_r[i]));
+			eg->set_target_v(m_accent_level * RES_VOLTAGE_DIVIDER(R79, effective_discharge_r));
 		}
 		else  // EG release
 		{
@@ -529,11 +547,11 @@ void tr707_audio_device::device_add_mconfig(machine_config &config)
 	// See mux_dac_v() for its interpretation.
 	for (int i = 0; i < MV_COUNT; ++i)
 	{
-		VA_RC_EG(config, m_mux_eg[i]).set_r(m_mux_eg_r[i]).set_c(MUX_EG_C[i]);
+		VA_RC_EG(config, m_mux_eg[i]).set_c(MUX_EG_C[i]);
 		DAC08(config, m_mux_dac[i]);
 		VA_VCA(config, m_mux_vca[i]);
-		m_mux_dac[i]->add_route(0, m_mux_vca[i], 1.0, 0);
-		m_mux_eg[i]->add_route(0, m_mux_vca[i], mux_dac_scale, 1);
+		m_mux_dac[i]->add_route(0, m_mux_vca[i], 1.0, va_vca_device::INPUT_AUDIO);
+		m_mux_eg[i]->add_route(0, m_mux_vca[i], mux_dac_scale, va_vca_device::INPUT_GAIN);
 	}
 
 
@@ -555,8 +573,8 @@ void tr707_audio_device::device_add_mconfig(machine_config &config)
 
 	VA_RC_EG(config, m_hat_eg).set_c(CAP_U(1));  // C71
 	auto &hat_vca = VA_VCA(config, "hat_vca");  // 2SD1469R, Q32
-	hat_hpf.add_route(0, hat_vca, HAT_VCA_SCALE, 0);
-	m_hat_eg->add_route(0, hat_vca, 1.0 / VCC, 1);
+	hat_hpf.add_route(0, hat_vca, HAT_VCA_SCALE, va_vca_device::INPUT_AUDIO);
+	m_hat_eg->add_route(0, hat_vca, 1.0 / VCC, va_vca_device::INPUT_GAIN);
 
 
 	// *** Single sound section ***
@@ -576,10 +594,10 @@ void tr707_audio_device::device_add_mconfig(machine_config &config)
 		DAC_6BIT_R2R(config, m_cymbal_dac[i]).set_output_range(0, VCC);
 		m_cymbal_dac[i]->add_route(0, m_cymbal_hpf[i], CYMBAL_HPF_SCALE);
 
-		VA_RC_EG(config, m_cymbal_eg[i]).set_r(m_cymbal_eg_r[i]).set_c(CYMBAL_EG_C[i]);
+		VA_RC_EG(config, m_cymbal_eg[i]).set_c(CYMBAL_EG_C[i]);
 		VA_VCA(config, m_cymbal_vca[i]);  // 2SD1469R [Q14, Q15]
-		m_cymbal_hpf[i]->add_route(0, m_cymbal_vca[i], CYMBAL_VCA_SCALE, 0);
-		m_cymbal_eg[i]->add_route(0, m_cymbal_vca[i], 1.0 / VCC, 1);
+		m_cymbal_hpf[i]->add_route(0, m_cymbal_vca[i], CYMBAL_VCA_SCALE, va_vca_device::INPUT_AUDIO);
+		m_cymbal_eg[i]->add_route(0, m_cymbal_vca[i], 1.0 / VCC, va_vca_device::INPUT_GAIN);
 	}
 
 
@@ -942,6 +960,14 @@ private:
 		offs_t y;
 	};
 
+	static constexpr const char *LED_NAMES[4][6] =
+	{
+		{"led_1",  "led_2",  "led_3",  "led_4",  "led_scale_1", "led_scale_2"},
+		{"led_5",  "led_6",  "led_7",  "led_8",  "led_scale_3", "led_scale_4"},
+		{"led_9",  "led_10", "led_11", "led_12", "led_group_1", "led_group_2"},
+		{"led_13", "led_14", "led_15", "led_16", "led_group_3", "led_group_4"},
+	};
+
 	static double discharge_t(double r, double c, double v);
 
 	u8 key_scan_r();
@@ -985,7 +1011,7 @@ private:
 	required_device<pwm_display_device> m_led_matrix;
 	required_ioport_array<4> m_key_switches;
 	output_finder<> m_cart_led;  // D325 (GL9NP2) dual LED (red & green).
-	std::vector<std::vector<output_finder<>>> m_leds;
+	output_finder<4, 6> m_leds;
 
 	required_device<hd61602_device> m_lcdc;
 	required_device<pwm_display_device> m_lcd_pwm;
@@ -1038,7 +1064,7 @@ roland_tr707_state::roland_tr707_state(const machine_config &mconfig, device_typ
 	, m_led_matrix(*this, "led_matrix")
 	, m_key_switches(*this, "KEY%u", 0U)
 	, m_cart_led(*this, "led_cart")
-	, m_leds(4)
+	, m_leds(*this, LED_NAMES)
 	, m_lcdc(*this, "lcdc")
 	, m_lcd_pwm(*this, "lcd_pwm")
 	, m_seg_triangle(*this, "seg_triangle_%u", 1U)
@@ -1070,20 +1096,6 @@ roland_tr707_state::roland_tr707_state(const machine_config &mconfig, device_typ
 	, m_tempo_source(0xff)
 	, m_midi_rxd_bit(true)  // Initial value is high, for serial "idle".
 {
-	// Initalize LED outputs.
-
-	constexpr const char *LED_NAME_SUFFIXES[4][6] =
-	{
-		{"1", "2", "3", "4", "scale_1", "scale_2"},
-		{"5", "6", "7", "8", "scale_3", "scale_4"},
-		{"9", "10", "11", "12", "group_1", "group_2"},
-		{"13", "14", "15", "16", "group_3", "group_4"},
-	};
-	for (int i = 0; i < 4; ++i)
-		for (int j = 0; j < 6; ++j)
-			m_leds[i].push_back(output_finder<>(*this, std::string("led_") + LED_NAME_SUFFIXES[i][j]));
-
-
 	// Build a mapping (m_seg_map) from the LCD controller's rows and columns (
 	// "com" and "seg" in hd61602 parlance) to the corresponding outputs.
 
@@ -1174,20 +1186,6 @@ void roland_tr707_state::machine_start()
 	save_item(NAME(m_key_led_row));
 	save_item(NAME(m_tempo_source));
 	save_item(NAME(m_midi_rxd_bit));
-
-	m_layout_727.resolve();
-	m_layout_cart.resolve();
-	m_dinsync_out.resolve();
-	m_cart_led.resolve();
-	for (std::vector<output_finder<>> &led_row : m_leds)
-		for (output_finder<> &led_output : led_row)
-			led_output.resolve();
-
-	m_seg_triangle.resolve();
-	m_seg_track.resolve();
-	m_seg_text.resolve();
-	m_seg_dot.resolve();
-	m_seg_digit.resolve();
 }
 
 void roland_tr707_state::machine_reset()
@@ -1717,12 +1715,12 @@ void roland_tr707_state::tr_707_727_common(machine_config &config)
 
 	TIMER(config, m_tempo_timer).configure_generic(FUNC(roland_tr707_state::tempo_timer_tick));
 	TIMER(config, m_tempo_restart_timer).configure_generic(FUNC(roland_tr707_state::tempo_restart_timer_tick));
-	TTL7474(config, m_tempo_ff, 0);  // 4013, IC4a.
+	TTL7474(config, m_tempo_ff);  // 4013, IC4a.
 	m_tempo_ff->comp_output_cb().set(FUNC(roland_tr707_state::internal_tempo_clock_cb));
 
 	VA_RC_EG(config, m_accent_adc_rc).set_c(CAP_U(0.27));  // C15.
 	TIMER(config, m_accent_adc_timer).configure_generic(FUNC(roland_tr707_state::accent_adc_timer_tick));
-	TTL7474(config, m_accent_adc_ff, 0);  // 4013, IC4b.
+	TTL7474(config, m_accent_adc_ff);  // 4013, IC4b.
 	m_accent_adc_ff->d_w(1);  // D tied to VCC.
 	m_accent_adc_ff->comp_output_cb().set(FUNC(roland_tr707_state::accent_adc_flipflop_cb));
 

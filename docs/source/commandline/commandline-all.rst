@@ -1125,18 +1125,16 @@ Configuration Options
 
       - ``mame.ini``
       - ``debug.ini``                       (if the debugger is enabled)
-      - ``source/``\ *<driver>*\ ``.ini``   (based on the source filename of the driver)
       - ``vertical.ini``                    (for systems with vertical monitor orientation)
       - ``horizont.ini``                    (for systems with horizontal monitor orientation)
-      - ``arcade.ini``                      (for systems in source added with ``GAME()`` macro)
-      - ``console.ini``                     (for systems in source added with ``CONS()`` macro)
-      - ``computer.ini``                    (for systems in source added with ``COMP()`` macro)
-      - ``othersys.ini``                    (for systems in source added with ``SYST()`` macro)
-      - ``vector.ini``                      (for vector systems only)
+      - ``raster.ini``                      (for raster display systems only)
+      - ``vector.ini``                      (for vector display systems only)
+      - ``lcd.ini``                         (for matrix display systems only)
+      - ``source/``\ *<driver>*\ ``.ini``   (based on the source filename of the driver)
       - *<parent>*\ ``.ini``                (for clones only, may be called recursively)
       - *<systemname>*\ ``.ini``
 
-      (See :ref:`advanced-multi-CFG` for further details)
+      (See :ref:`advanced-multicfg-order` for further details)
 
     The settings in the later INIs override those in the earlier INIs.  So, for
     example, if you wanted to disable overlay effects in the vector systems, you
@@ -1354,7 +1352,7 @@ Core Search Path Options
 
     Specifies the default path from which to load loose software image files.
 
-    The default is ``sofware`` (that is, a directory ``software`` in the current
+    The default is ``software`` (that is, a directory ``software`` in the current
     working directory).
 
     Example:
@@ -1811,7 +1809,7 @@ Core State/Playback Options
             All save states will be stored inside sta\c64\robby\
 
 .. Tip:: Note that even on Microsoft Windows, you should use ``/`` as your
-         path seperator for **-statename**
+         path separator for **-statename**
 
 
 .. _mame-commandline-noburnin:
@@ -2591,7 +2589,7 @@ Core Artwork Options
 
 .. _mame-commandline-fallbackartwork:
 
-**-fallback_artwork**
+**-fallback_artwork** *<artwork name>*
 
     Specifies fallback artwork if no external artwork or internal driver layout
     is defined. If external artwork for the system is present or a layout is
@@ -2606,10 +2604,9 @@ Core Artwork Options
          ``horizontal.ini`` and ``vertical.ini`` to specify different
          fallback artwork choices for horizontal and vertical systems.
 
-
 .. _mame-commandline-overrideartwork:
 
-**-override_artwork**
+**-override_artwork** *<artwork name>*
 
     Specifies override artwork for external artwork and internal driver layout.
 
@@ -2617,6 +2614,24 @@ Core Artwork Options
         .. code-block:: bash
 
             mame galaga -override_artwork puckman
+
+.. _mame-commandline-artworkfont:
+
+**-artwork_font** / **-artfont** *<fontname>*
+
+    Specifies the font to use for artwork text elements.  The same
+    considerations apply as for the UI font (see the :ref:`uifont option
+    <mame-commandline-uifont>`).
+
+    Note that artwork is typically designed around a sans serif font with tight
+    character spacing (e.g. **Tahoma**, which is the default on Windows).  Using
+    a font with wider character spacing or a fixed pitch font (e.g. a Courier
+    family font) may result in text positioning issues.
+
+    Example:
+        .. code-block:: bash
+
+            mame starwbc -artwork_font "Comic Sans MS"
 
 
 .. _mame-commandline-screenoptions:
@@ -3005,11 +3020,11 @@ Core Sound Options
     * - ``wasapi``
       - Windows
       - Yes
-      - Yes [#SoundWASAPIMonitoring]_
+      - Yes
       - Yes
       - Yes
     * - ``xaudio2``
-      - Windows [#SoundXAudio2OS]_
+      - Windows
       - No
       - No
       - Yes
@@ -3047,11 +3062,6 @@ Core Sound Options
 
 
 ..  rubric:: Footnotes
-
-..  [#SoundWASAPIMonitoring] MAME requires Windows 10 1703 or later to use
-    output monitoring with WASAPI.
-
-..  [#SoundXAudio2OS] MAME requires Windows 8 or later to use XAudio2.
 
 ..  [#SoundWinSDL] While SDL is not a supported option on official MAME builds
     for Windows, you can compile MAME with SDL support on Windows.
@@ -3259,24 +3269,6 @@ Core Input Options
 
             mame apple2e -ui_active
 
-.. _mame-commandline-nooffscreenreload:
-
-**-[no]offscreen_reload** / **-[no]reload**
-
-    Controls whether or not MAME treats a second button input from a lightgun as
-    a reload signal.  In this case, MAME will report the gun's position as
-    (0,MAX) with the trigger held, which is equivalent to an offscreen reload.
-
-    This is only needed for games that required you to shoot offscreen to
-    reload, and then only if your gun does not support off screen reloads.
-
-    The default is OFF (**-nooffscreen_reload**).
-
-    Example:
-        .. code-block:: bash
-
-            mame lethalen -offscreen_reload
-
 .. _mame-commandline-joystickmap:
 
 **-joystick_map** *<map>* / **-joymap** *<map>*
@@ -3318,7 +3310,7 @@ Core Input Options
     Generally you will want to set up the **-joystick_map** setting in the
     per-system ``<system>.ini`` file as opposed to the main ``MAME.INI``
     file so that the mapping only affects the systems you want it to.  See
-    :ref:`Multiple Configuration Files <advanced-multi-CFG>` for further
+    :ref:`Multiple Configuration Files <advanced-multicfg-order>` for further
     details on per-system configuration.
 
     Maps are defined as a string of numbers and characters. Since the grid is
@@ -3847,7 +3839,7 @@ Core Communication Options
     Local port to bind to. This can be any traditional communications port as
     an unsigned 16-bit integer (0-65535).
 
-    The default value is ``15122``.
+    The default value is ``15112``.
 
     Example:
         .. code-block:: bash
@@ -3876,7 +3868,7 @@ Core Communication Options
     Remote port to connect to. This can be any traditional communications port
     as an unsigned 16-bit integer (0-65535).
 
-    The default value is "``15122``".
+    The default value is "``15112``".
 
     Example:
         .. code-block:: bash
@@ -3906,7 +3898,9 @@ Core Misc Options
 
 **-[no]drc**
 
-    Enable DRC (dynamic recompiler) CPU core if available for maximum speed.
+    Enable DRC (dynamic recompiler) CPU cores if available.  Turn this option
+    off to use interpreter CPU cores if available.  This option does not affect
+    CPUs that only support one core type.
 
     The default is ON (**-drc**).
 
@@ -3915,18 +3909,37 @@ Core Misc Options
 
             mame ironfort -nodrc
 
+.. _mame-commandline-drcrwx:
+
+**\-[no]drc_rwx**
+
+    Allow DRC CPU cores to use memory that is simultaneously writable and
+    executable if supported.  Turning this option off may decrease performance.
+    This option only affects DRC CPU cores, and has no effect in configurations
+    that do not allow memory to be simultaneously writable and executable (e.g.
+    recent versions of macOS and NetBSD).
+
+    The default is ON (**-drc_rwx**).
+
+    Example:
+        .. code-block:: bash
+
+            mame fiveside -nodrc_rwx
+
 .. _mame-commandline-drcusec:
 
 **\-[no]drc_use_c**
 
-    Force DRC to use the C code backend.
+    Force DRC CPU cores to use the portable C code back-end when a native
+    back-end is available.  This option only affects DRC CPU cores, and has no
+    effect if a native DRC back-end is not available.
 
     The default is OFF (**-nodrc_use_c**).
 
     Example:
         .. code-block:: bash
 
-            mame ironfort -drc_use_c
+            mame vamphalf -drc_use_c
 
 .. _mame-commandline-drcloguml:
 
@@ -4004,12 +4017,21 @@ Core Misc Options
 
 **-uifont** *<fontname>*
 
-    Specifies the name of a font file to use for the UI font. If this font
-    cannot be found or cannot be loaded, the system will fall back to its
-    built-in UI font. On some platforms *fontname* can be a system font name
-    instead of a BDF font file.
+    Specifies the font to use for UI text. If this font cannot be found or
+    cannot be loaded, MAME will fall back to its built-in UI font.  Supported
+    fonts depend on the platform and selected UI font provider module.  In some
+    configurations, *fontname* can be a system font name or a path to a TrueType
+    font file.  In all cases, a path to  a BDF (Adobe Glyph Bitmap Distribution
+    Format) font file can be used.
 
-    The default is ``default`` (use the OSD-determined default font).
+    Note that characters available depend on the font, and many fonts do not
+    cover multiple writing systems and languages, or symbols like arrows.
+    Depending on the configuration, MAME may not automatically substitute
+    characters from other fonts.  Characters that are not available may be
+    replaced with substitute glyphs (often rectangles).
+
+    The default is ``default`` (use the default font determined by the UI font
+    provider module).
 
     Example:
         .. code-block:: bash
@@ -4028,17 +4050,6 @@ Core Misc Options
         .. code-block:: bash
 
             mame -ui simple
-
-.. _mame-commandline-ramsize:
-
-**-ramsize** *[n]*
-
-    Allows you to change the default RAM size (if supported by driver).
-
-    Example:
-        .. code-block:: bash
-
-            mame coco -ramsize 16K
 
 .. _mame-commandline-confirmquit:
 
@@ -4094,6 +4105,22 @@ Core Misc Options
 
             mame galaga88 -nonvram_save
 
+.. _mame-commandline-rtc:
+
+**-rtc <value>**
+
+    Specifies a fixed baseline time to initialize the real-time clock (RTC) chips
+    emulated by MAME. By default, MAME initializes RTC chips using your host
+    computer's current system time.
+
+    The option accepts a 14-digit formatted date and time string for `<value>`
+    in the format **YYYYMMDDhhmmss** (e.g., ``20260709070000`` for July 9, 2026,
+    at 07:00:00).
+
+.. Tip:: If an input macro playback file (such as with **-playback**) is active,
+         it takes absolute precedence to prevent input desynchronization. The
+         **-rtc** command-line option will be ignored, and a warning will be
+         displayed in the console.
 
 .. _mame-commandline-scripting:
 

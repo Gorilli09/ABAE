@@ -45,12 +45,6 @@ Known Non-Issues (confirmed on Real Genesis)
 
 void md_base_state::megadriv_z80_bank_w(uint16_t data)
 {
-	// TODO: menghu crashes here
-	// Tries to setup a bank of 0xff0000 from z80 side (PC=1131) after you talk with the cashier twice.
-	// Without a guard over it game will trash 68k memory causing a crash, works on real HW with everdrive
-	// so not coming from a cart copy protection.
-	// Update: it breaks cfodder BGM on character select at least, therefore we current don't guard against it
-	// Apparently reading 68k RAM from z80 is not recommended by Sega, so *writing* isn't possible lacking bus grant?
 	m_genz80.z80_bank_addr = ((m_genz80.z80_bank_addr >> 1) | (data << 23)) & 0xff8000;
 }
 
@@ -452,7 +446,7 @@ TIMER_CALLBACK_MEMBER(md_base_state::megadriv_z80_run_state)
 		m_z80snd->set_input_line(INPUT_LINE_RESET, CLEAR_LINE);
 
 		/* Check if z80 has the bus */
-		m_z80snd->set_input_line(Z80_INPUT_LINE_BUSRQ, m_genz80.z80_has_bus ? CLEAR_LINE : ASSERT_LINE);
+		m_z80snd->set_input_line(Z80_INPUT_LINE_BUSREQ, m_genz80.z80_has_bus ? CLEAR_LINE : ASSERT_LINE);
 	}
 }
 
@@ -772,7 +766,7 @@ void md_core_state::md_core_ntsc(machine_config &config)
 	m_vdp->hint_cb().set(FUNC(md_core_state::vdp_hint_cb));
 	m_vdp->set_screen("megadriv");
 
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_refresh_hz(MASTER_CLOCK_NTSC / 10 / 262 / 342); // same as SMS?
 //  m_screen->set_refresh_hz(double(MASTER_CLOCK_NTSC) / 8 / 262 / 427); // or 427 Htotal?
 	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0)); // Vblank handled manually.
@@ -796,7 +790,7 @@ void md_core_state::md_core_pal(machine_config &config)
 	m_vdp->hint_cb().set(FUNC(md_core_state::vdp_hint_cb));
 	m_vdp->set_screen("megadriv");
 
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_refresh_hz(MASTER_CLOCK_PAL / 10 / 313 / 342); // same as SMS?
 //  m_screen->set_refresh_hz(MASTER_CLOCK_PAL / 8 / 313 / 423); // or 423 Htotal?
 	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0)); // Vblank handled manually.
@@ -813,13 +807,13 @@ void md_base_state::megadriv_ioports(machine_config &config)
 	auto &hl(INPUT_MERGER_ANY_HIGH(config, "hl"));
 	hl.output_handler().set_inputline(m_maincpu, 2);
 
-	MEGADRIVE_IO_PORT(config, m_ioports[0], 0);
+	MEGADRIVE_IO_PORT(config, m_ioports[0]);
 	m_ioports[0]->hl_handler().set("hl", FUNC(input_merger_device::in_w<0>));
 
-	MEGADRIVE_IO_PORT(config, m_ioports[1], 0);
+	MEGADRIVE_IO_PORT(config, m_ioports[1]);
 	m_ioports[1]->hl_handler().set("hl", FUNC(input_merger_device::in_w<1>));
 
-	MEGADRIVE_IO_PORT(config, m_ioports[2], 0);
+	MEGADRIVE_IO_PORT(config, m_ioports[2]);
 	m_ioports[2]->hl_handler().set("hl", FUNC(input_merger_device::in_w<2>));
 }
 

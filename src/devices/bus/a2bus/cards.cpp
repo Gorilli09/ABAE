@@ -17,6 +17,7 @@
 #include "a2applicard.h"
 #include "a2arcadebd.h"
 #include "a2cffa.h"
+#include "a2clock.h"
 #include "a2corvus.h"
 #include "a2diskiing.h"
 #include "a2dx1.h"
@@ -33,6 +34,7 @@
 #include "a2sam.h"
 #include "a2scsi.h"
 #include "a2sd.h"
+#include "a2sic.h"
 #include "a2softcard.h"
 #include "a2ssc.h"
 #include "a2superdrive.h"
@@ -53,6 +55,7 @@
 #include "ezcgi.h"
 #include "grafex.h"
 #include "grappler.h"
+#include "ibsap2.h"
 #include "lancegs.h"
 #include "laser128.h"
 #include "mouse.h"
@@ -69,6 +72,7 @@
 #include "ssbapple.h"
 #include "ssprite.h"
 #include "suprterminal.h"
+#include "sweetalk.h"
 #include "timemasterho.h"
 #include "titan3plus2.h"
 #include "transwarp.h"
@@ -102,7 +106,6 @@ void apple2_cards(device_slot_interface &device)
 	device.option_add("videoterm", A2BUS_VIDEOTERM);           // Videx VideoTerm
 	device.option_add("ssc", A2BUS_SSC);                       // Apple Super Serial Card
 	device.option_add("ssi", APRICORN_SSI);                    // Apricorn Super Serial Imager
-	device.option_add("swyft", A2BUS_SWYFT);                   // IAI SwyftCard
 	device.option_add("themill", A2BUS_THEMILL);               // Stellation Two The Mill (6809 card)
 	device.option_add("sam", A2BUS_SAM);                       // SAM Software Automated Mouth (8-bit DAC + speaker)
 	device.option_add("alfam2", A2BUS_ALFAM2);                 // ALF Apple Music II
@@ -115,7 +118,8 @@ void apple2_cards(device_slot_interface &device)
 	device.option_add("zipdrive", A2BUS_ZIPDRIVE);             // ZIP Technologies IDE card
 	device.option_add("echoiiplus", A2BUS_ECHOPLUS);           // Street Electronics Echo Plus (Echo II + Mockingboard clone)
 	device.option_add("scsi", A2BUS_SCSI);                     // Apple II SCSI Card
-	device.option_add("applicard", A2BUS_APPLICARD);           // PCPI Applicard
+	device.option_add("applicard", A2BUS_APPLICARD);           // PCPI Appli-Card
+	device.option_add("ace80", A2BUS_ACE80);                   // Franklin ACE 80 CPU Card
 	device.option_add("aesms", A2BUS_AESMS);                   // Applied Engineering Super Music Synthesizer
 	device.option_add("ultraterm", A2BUS_ULTRATERM);           // Videx UltraTerm (original)
 	device.option_add("ultratermenh", A2BUS_ULTRATERMENH);     // Videx UltraTerm (enhanced //e)
@@ -157,6 +161,13 @@ void apple2_cards(device_slot_interface &device)
 	device.option_add("vistaa800", A2BUS_VISTAA800);           // Vista A800 8" Disk Controller Card
 	device.option_add("wicotrackball", A2BUS_WICOTRACKBALL);   // Wico Trackball
 	device.option_add("ieee488", A2BUS_IEEE488);               // Apple II IEEE-488 Interface Card
+	device.option_add("romcard", A2BUS_ROMCARDUSER);           // Apple II ROM Card that loads a custom ROM image
+	device.option_add("romcardfp", A2BUS_ROMCARDFP);           // Apple II ROM Card with Autostart Monitor + Applesoft BASIC
+	device.option_add("romcardint", A2BUS_ROMCARDINT);         // Apple II ROM Card with Autostart Monitor + Integer BASIC
+	device.option_add("ap2", A2BUS_IBSAP2);                    // IBS Computertechnik AP 2 Serial Interface
+	device.option_add("sic", A2BUS_SIC);                       // Apple II Serial Interface Card
+	device.option_add("sweetalk", A2BUS_SWEETALK);             // Micromint Sweet Talker Phonetic Speech Synthesizer Interface
+	device.option_add("clock", APPLE_CLOCK);                   // Mountain Hardware Apple Clock
 }
 
 void apple2e_cards(device_slot_interface &device)
@@ -190,7 +201,8 @@ void apple2e_cards(device_slot_interface &device)
 	device.option_add("echoiiplus", A2BUS_ECHOPLUS);           // Street Electronics Echo Plus (Echo II + Mockingboard clone)
 	device.option_add("scsi", A2BUS_SCSI);                     // Apple II SCSI Card
 	device.option_add("hsscsi", A2BUS_HSSCSI);                 // Apple II High-Speed SCSI Card
-	device.option_add("applicard", A2BUS_APPLICARD);           // PCPI Applicard
+	device.option_add("applicard", A2BUS_APPLICARD);           // PCPI Appli-Card
+	device.option_add("ace80", A2BUS_ACE80);                   // Franklin ACE 80 CPU Card
 	device.option_add("aesms", A2BUS_AESMS);                   // Applied Engineering Super Music Synthesizer
 	device.option_add("ultraterm", A2BUS_ULTRATERM);           // Videx UltraTerm (original)
 	device.option_add("ultratermenh", A2BUS_ULTRATERMENH);     // Videx UltraTerm (enhanced //e)
@@ -240,6 +252,13 @@ void apple2e_cards(device_slot_interface &device)
 	device.option_add("vistaa800", A2BUS_VISTAA800);           // Vista A800 8" Disk Controller Card
 	device.option_add("wicotrackball", A2BUS_WICOTRACKBALL);   // Wico Trackball
 	device.option_add("ieee488", A2BUS_IEEE488);               // Apple II IEEE-488 Interface Card
+	device.option_add("romcard", A2BUS_ROMCARDUSER);           // Apple II ROM Card that loads a custom ROM image
+	device.option_add("romcardfp", A2BUS_ROMCARDFP);           // Apple II ROM Card with Autostart Monitor + Applesoft BASIC
+	device.option_add("romcardint", A2BUS_ROMCARDINT);         // Apple II ROM Card with Autostart Monitor + Integer BASIC
+	device.option_add("ap2", A2BUS_IBSAP2);                    // IBS Computertechnik AP 2 Serial Interface
+	device.option_add("sic", A2BUS_SIC);                       // Apple II Serial Interface Card
+	device.option_add("sweetalk", A2BUS_SWEETALK);             // Micromint Sweet Talker Phonetic Speech Synthesizer Interface
+	device.option_add("clock", APPLE_CLOCK);                   // Mountain Hardware Apple Clock
 }
 
 void apple2gs_cards(device_slot_interface &device)
@@ -256,7 +275,6 @@ void apple2gs_cards(device_slot_interface &device)
 	device.option_add("videoterm", A2BUS_VIDEOTERM);           // Videx VideoTerm
 	device.option_add("ssc", A2BUS_SSC);                       // Apple Super Serial Card
 	device.option_add("ssi", APRICORN_SSI);                    // Apricorn Super Serial Imager
-	device.option_add("swyft", A2BUS_SWYFT);                   // IAI SwyftCard
 	device.option_add("themill", A2BUS_THEMILL);               // Stellation Two The Mill (6809 card)
 	device.option_add("sam", A2BUS_SAM);                       // SAM Software Automated Mouth (8-bit DAC + speaker)
 	device.option_add("alfam2", A2BUS_ALFAM2);                 // ALF Apple Music II
@@ -271,7 +289,8 @@ void apple2gs_cards(device_slot_interface &device)
 	device.option_add("echoiiplus", A2BUS_ECHOPLUS);           // Street Electronics Echo Plus (Echo II + Mockingboard clone)
 	device.option_add("scsi", A2BUS_SCSI);                     // Apple II SCSI Card
 	device.option_add("hsscsi", A2BUS_HSSCSI);                 // Apple II High-Speed SCSI Card
-	device.option_add("applicard", A2BUS_APPLICARD);           // PCPI Applicard
+	device.option_add("applicard", A2BUS_APPLICARD);           // PCPI Appli-Card
+	device.option_add("ace80", A2BUS_ACE80);                   // Franklin ACE 80 CPU Card
 	device.option_add("aesms", A2BUS_AESMS);                   // Applied Engineering Super Music Synthesizer
 	device.option_add("ultraterm", A2BUS_ULTRATERM);           // Videx UltraTerm (original)
 	device.option_add("ultratermenh", A2BUS_ULTRATERMENH);     // Videx UltraTerm (enhanced //e)
@@ -316,12 +335,14 @@ void apple2gs_cards(device_slot_interface &device)
 	device.option_add("superdrive", A2BUS_SUPERDRIVE);         // Apple II 3.5" Disk Controller
 	device.option_add("wicotrackball", A2BUS_WICOTRACKBALL);   // Wico Trackball
 	device.option_add("ieee488", A2BUS_IEEE488);               // Apple II IEEE-488 Interface Card
+	device.option_add("ap2", A2BUS_IBSAP2);                    // IBS Computertechnik AP 2 Serial Interface
+	device.option_add("sweetalk", A2BUS_SWEETALK);             // Micromint Sweet Talker Phonetic Speech Synthesizer Interface
 }
 
 void apple3_cards(device_slot_interface &device)
 {
 	device.option_add("cffa2", A2BUS_CFFA2_6502);          // CFFA2.0 Compact Flash for Apple II (www.dreher.net), 6502 firmware
-	device.option_add("applicard", A2BUS_APPLICARD);       // PCPI Applicard
+	device.option_add("applicard", A2BUS_APPLICARD);       // PCPI Appli-Card
 	device.option_add("thclock", A2BUS_THUNDERCLOCK);      // ThunderWare ThunderClock Plus - driver assumes slot 2 by default
 	device.option_add("mouse", A2BUS_MOUSE);               // Apple II Mouse Card
 	device.option_add("focusdrive", A2BUS_FOCUSDRIVE);     // Focus Drive IDE card

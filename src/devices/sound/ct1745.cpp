@@ -30,6 +30,10 @@ ct1745_mixer_device::ct1745_mixer_device(const machine_config &mconfig, const ch
 	: device_t(mconfig, CT1745, tag, owner, clock)
 	, device_memory_interface(mconfig, *this)
 	, device_mixer_interface(mconfig, *this)
+	, m_irq_select_read_cb(*this, 0)
+	, m_irq_select_write_cb(*this)
+	, m_dma_select_read_cb(*this, 0)
+	, m_dma_select_write_cb(*this)
 	, m_irq_status_cb(*this, 0)
 	, m_fm(*this, finder_base::DUMMY_TAG)
 	, m_ldac(*this, finder_base::DUMMY_TAG)
@@ -146,7 +150,7 @@ void ct1745_mixer_device::map(address_map &map)
 				reset_state();
 		})
 	);
-// SB1/2 compatibility section
+// SB1/2 compatibility section (CT1345)
 	map(0x04, 0x04).lrw8(
 		NAME([this] (offs_t offset) {
 			return (m_dac_level[0] & 0xf0) | (m_dac_level[1] >> 4);
@@ -158,7 +162,17 @@ void ct1745_mixer_device::map(address_map &map)
 	);
 
 //  map(0x06, 0x06) FM Output Control?
-//  map(0x0a, 0x0a) Microphone level?
+	// Microphone level
+	// NOTE: sc2000 cares about this for card detection
+	map(0x0a, 0x0a).lrw8(
+		NAME([this] (offs_t offset) {
+			return m_mic_level >> 5;
+		}),
+		NAME([this] (offs_t offset, u8 data) {
+			// 6 dB steps
+			m_mic_level = (data & 7) << 5;
+		})
+	);
 //  map(0x0c, 0x0c) Input/Filter Select
 	// RMW (to the index!?) by ibm5170_cdrom:zyclunt, should be "Output Filter/Stereo Select"
 //  map(0x0e, 0x0e).lr8(NAME([] () { return 0x02; })); // Output/Stereo Select
@@ -243,6 +257,7 @@ void ct1745_mixer_device::map(address_map &map)
 			return m_mic_level;
 		}),
 		NAME([this] (offs_t offset, u8 data) {
+			// 2 dB steps
 			m_mic_level = data & 0xf8;
 		})
 	);
@@ -315,8 +330,14 @@ void ct1745_mixer_device::map(address_map &map)
 
 	// PnP ports
 	// IRQ/DMA select
-	map(0x80, 0x80).lr8(NAME([] () { return 0x12; }));
-	map(0x81, 0x81).lr8(NAME([] () { return 0x22; }));
+	map(0x80, 0x80).lrw8(
+		NAME([this] () { return m_irq_select_read_cb(); }),
+		NAME([this] (u8 data) { m_irq_select_write_cb(data); })
+	);
+	map(0x81, 0x81).lrw8(
+		NAME([this] () { return m_dma_select_read_cb(); }),
+		NAME([this] (u8 data) { m_dma_select_write_cb(data); })
+	);
 	// IRQ Status
 	map(0x82, 0x82).lr8(NAME([this] () { return m_irq_status_cb(); }));
 

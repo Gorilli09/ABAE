@@ -130,8 +130,8 @@ K052109_CB_MEMBER(ajax_state::tile_callback)
 {
 	static const int layer_colorbase[] = { 1024 / 16, 0 / 16, 512 / 16 };
 
-	*code |= ((*color & 0x0f) << 8) | (bank << 12);
-	*color = layer_colorbase[layer] + ((*color & 0xf0) >> 4);
+	code |= ((color & 0x0f) << 8) | (bank << 12);
+	color = layer_colorbase[layer] + ((color & 0xf0) >> 4);
 }
 
 
@@ -151,11 +151,11 @@ K051960_CB_MEMBER(ajax_state::sprite_callback)
 	   6 over A    (1 = have priority)
 	   never over F
 	*/
-	*priority = 0;
-	if ( *color & 0x10) *priority |= GFX_PMASK_4; // Z = 4
-	if (~*color & 0x40) *priority |= GFX_PMASK_2; // A = 2
-	if ( *color & 0x20) *priority |= GFX_PMASK_1; // B = 1
-	*color = sprite_colorbase + (*color & 0x0f);
+	priority = 0;
+	if ( color & 0x10) priority |= GFX_PMASK_4; // Z = 4
+	if (~color & 0x40) priority |= GFX_PMASK_2; // A = 2
+	if ( color & 0x20) priority |= GFX_PMASK_1; // B = 1
+	color = sprite_colorbase + (color & 0x0f);
 }
 
 
@@ -169,8 +169,8 @@ K051316_CB_MEMBER(ajax_state::zoom_callback)
 {
 	enum { zoom_colorbase = 768 / 128 };
 
-	*code |= ((*color & 0x07) << 8);
-	*color = zoom_colorbase + ((*color & 0x08) >> 3);
+	code |= ((color & 0x07) << 8);
+	color = zoom_colorbase + ((color & 0x08) >> 3);
 }
 
 
@@ -389,7 +389,6 @@ void ajax_state::machine_start()
 	uint8_t *main = memregion("maincpu")->base();
 	uint8_t *sub  = memregion("sub")->base();
 
-	m_lamps.resolve();
 	m_mainbank->configure_entries(0, 4, &main[0x00000], 0x2000);
 	m_mainbank->configure_entries(4, 8, &main[0x10000], 0x2000);
 	m_subbank->configure_entries(0, 9, &sub[0x00000], 0x2000);
@@ -565,7 +564,7 @@ void ajax_state::ajax(machine_config &config)
 	WATCHDOG_TIMER(config, m_watchdog);
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(24_MHz_XTAL / 4, 384, 0+8, 320, 264, 16, 240);
 	screen.set_screen_update(FUNC(ajax_state::screen_update));
 	screen.set_palette(m_palette);

@@ -102,6 +102,8 @@ protected:
 	virtual void write_c0nx(uint8_t offset, uint8_t data) override;
 	virtual uint8_t read_cnxx(uint8_t offset) override;
 	virtual uint8_t read_c800(uint16_t offset) override;
+	virtual bool take_c800() const override { return true; }
+	virtual void reset_from_bus() override;
 
 	required_device<pia6821_device> m_pia;
 	required_device<msm5832_device> m_msm5832;
@@ -189,6 +191,11 @@ void a2bus_timemasterho_device::device_reset()
 	m_started = true;
 }
 
+void a2bus_timemasterho_device::reset_from_bus()
+{
+	m_pia->reset();
+}
+
 
 /*-------------------------------------------------
     read_c0nx - called for reads from this card's c0nx space
@@ -227,7 +234,7 @@ uint8_t a2bus_timemasterho_device::read_cnxx(uint8_t offset)
 	{
 		if (!(m_dsw1->read() & 2))  // TimeMaster native
 		{
-			return m_rom[offset+0xc00];
+			return m_rom[offset|0xc00];
 		}
 	}
 
@@ -241,7 +248,7 @@ uint8_t a2bus_timemasterho_device::read_cnxx(uint8_t offset)
 
 uint8_t a2bus_timemasterho_device::read_c800(uint16_t offset)
 {
-	return m_rom[offset+0xc00];
+	return m_rom[offset|0xc00];
 }
 
 void a2bus_timemasterho_device::pia_out_a(uint8_t data)

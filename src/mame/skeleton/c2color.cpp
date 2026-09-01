@@ -29,7 +29,7 @@
 
 #include "emu.h"
 
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8052.h"
 
 #include "bus/generic/slot.h"
 #include "bus/generic/carts.h"
@@ -131,9 +131,9 @@ void c2_color_state::c2_color(machine_config &config)
 {
 	I8032(config, m_maincpu, 12'000'000); // exact type and clock unknown
 	m_maincpu->set_addrmap(AS_PROGRAM, &c2_color_state::prog_map);
-	m_maincpu->set_addrmap(AS_IO, &c2_color_state::ext_map);
+	m_maincpu->set_addrmap(AS_DATA, &c2_color_state::ext_map);
 
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_refresh_hz(60);
 	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0));
 	m_screen->set_size(64*8, 32*8);

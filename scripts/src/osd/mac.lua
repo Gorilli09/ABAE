@@ -58,7 +58,6 @@ project ("qtdbg_" .. _OPTIONS["osd"])
 	qtdebuggerbuild()
 
 project ("osd_" .. _OPTIONS["osd"])
-	targetsubdir(_OPTIONS["target"] .."_" .._OPTIONS["subtarget"])
 	uuid (os.uuid("osd_" .. _OPTIONS["osd"]))
 	kind (LIBTYPE)
 
@@ -140,7 +139,6 @@ project ("osd_" .. _OPTIONS["osd"])
 
 
 project ("ocore_" .. _OPTIONS["osd"])
-	targetsubdir(_OPTIONS["target"] .."_" .. _OPTIONS["subtarget"])
 	uuid (os.uuid("ocore_" .. _OPTIONS["osd"]))
 	kind (LIBTYPE)
 
@@ -156,9 +154,12 @@ project ("ocore_" .. _OPTIONS["osd"])
 		MAME_DIR .. "src/lib",
 		MAME_DIR .. "src/lib/util",
 		MAME_DIR .. "src/osd/mac",
+		ext_includedir("asio"),
 	}
 
 	files {
+		MAME_DIR .. "src/osd/asio.cpp",
+		MAME_DIR .. "src/osd/asio.h",
 		MAME_DIR .. "src/osd/osdcore.cpp",
 		MAME_DIR .. "src/osd/osdcore.h",
 		MAME_DIR .. "src/osd/osdfile.h",

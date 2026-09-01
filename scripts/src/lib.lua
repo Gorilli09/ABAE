@@ -26,7 +26,10 @@ project "utils"
 		ext_includedir("utf8proc"),
 	}
 
-if not _OPTIONS["with-system-utf8proc"] then
+	defines {
+		"ZLIB_CONST",
+	}
+if _OPTIONS["with-system-utf8proc"] ~= "1" then
 	defines {
 		"UTF8PROC_STATIC",
 	}
@@ -34,6 +37,10 @@ end
 
 	files {
 		MAME_DIR .. "src/lib/util/abi.h",
+		MAME_DIR .. "src/lib/util/aes256cbc.cpp",
+		MAME_DIR .. "src/lib/util/aes256cbc.h",
+		MAME_DIR .. "src/lib/util/archiver.cpp",
+		MAME_DIR .. "src/lib/util/archiver.h",
 		MAME_DIR .. "src/lib/util/avhuff.cpp",
 		MAME_DIR .. "src/lib/util/avhuff.h",
 		MAME_DIR .. "src/lib/util/aviio.cpp",
@@ -56,6 +63,7 @@ end
 		MAME_DIR .. "src/lib/util/corealloc.h",
 		MAME_DIR .. "src/lib/util/corefile.cpp",
 		MAME_DIR .. "src/lib/util/corefile.h",
+		MAME_DIR .. "src/lib/util/corefloat.h",
 		MAME_DIR .. "src/lib/util/corestr.cpp",
 		MAME_DIR .. "src/lib/util/corestr.h",
 		MAME_DIR .. "src/lib/util/coretmpl.h",
@@ -113,6 +121,7 @@ end
 		MAME_DIR .. "src/lib/util/path.h",
 		MAME_DIR .. "src/lib/util/path_to_regex.cpp",
 		MAME_DIR .. "src/lib/util/path_to_regex.hpp",
+		MAME_DIR .. "src/lib/util/pkzipdefs.h",
 		MAME_DIR .. "src/lib/util/plaparse.cpp",
 		MAME_DIR .. "src/lib/util/plaparse.h",
 		MAME_DIR .. "src/lib/util/png.cpp",

@@ -74,6 +74,8 @@ TODO:
   * powerlrd: occurs at pink mountain on the right, it's not 1:1 identical on MAME
   * several homebrews by Rafael: precisely placed overlap to force character
     color to change to white, see for example Piggyback Planet and Mean Santa
+- on the real console, disabling display while 824x is rendering major system may
+  cause glitches, such as duplicated graphics, is this the trick backgamm uses?
 - 8245(PAL) video timing is not 100% accurate, though vtotal and htotal should
   be correct. The 8245 is put into slave mode at vblank, timing signals and
   vblank IRQ are taken over during it (the Videopac pcb even has extra TTL to
@@ -129,6 +131,8 @@ Plenty games have minor bugs not worth mentioning here.
 #include "screen.h"
 #include "softlist_dev.h"
 #include "speaker.h"
+
+#include <bit>
 
 
 namespace {
@@ -407,7 +411,7 @@ u8 odyssey2_state::p2_read()
 	{
 		// P12: 74156 keyboard decoder enable, 74156 inputs from P20-P22
 		// 74148 priority encoder, GS to P24, outputs to P25-P27
-		u8 inp = count_leading_zeros_32(m_keyboard[m_p2 & 0x07]->read()) - 24;
+		u8 inp = std::countl_zero(u8(m_keyboard[m_p2 & 0x07]->read()));
 		if (inp < 8)
 			data &= inp << 5 | 0xf;
 	}
@@ -768,7 +772,7 @@ void odyssey2_state::odyssey2(machine_config &config)
 	m_maincpu->t1_in_cb().set(FUNC(odyssey2_state::t1_read));
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_screen_update(FUNC(odyssey2_state::screen_update));
 	m_screen->set_video_attributes(VIDEO_ALWAYS_UPDATE);
 	m_screen->set_palette("palette");
@@ -830,7 +834,7 @@ void vpp_state::g7400(machine_config &config)
 	m_maincpu->prog_out_cb().set(m_i8243, FUNC(i8243_device::prog_w));
 
 	// video hardware
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_screen_update(FUNC(vpp_state::screen_update));
 	m_screen->set_video_attributes(VIDEO_ALWAYS_UPDATE);
 	m_screen->set_palette("palette");

@@ -5,9 +5,10 @@
 Amstrad MegaPC
 
 TODO:
-- MD portion;
-- chipset not extensively tested (assume broken as per pc/teradrive.cpp);
+- MD ISA8 portion (including sharing of OPN as adlib compatible, needs PAL mods for YM7101);
+- chipset not extensively tested (assume incomplete as per pc/teradrive.cpp);
 - megapcpl: floppy boot loading fails even if CMOS is setup properly;
+- front panel slide (MD on left, PC on right. Determines what is driving the monitor);
 
 **************************************************************************************************/
 
@@ -119,7 +120,7 @@ void megapc_state::megapc(machine_config &config)
 	m_wd7600->spkr_callback().set(FUNC(megapc_state::wd7600_spkr));
 
 	// on board devices
-	ISA16(config, m_isabus, 0);
+	ISA16(config, m_isabus);
 	m_isabus->set_memspace(m_maincpu, AS_PROGRAM);
 	m_isabus->set_iospace(m_maincpu, AS_IO);
 	m_isabus->iochck_callback().set(m_wd7600, FUNC(wd7600_device::iochck_w));
@@ -143,16 +144,17 @@ void megapc_state::megapc(machine_config &config)
 	m_isabus->drq7_callback().set(m_wd7600, FUNC(wd7600_device::dreq7_w));
 
 	// FIXME: determine ISA bus clock
-	ISA16_SLOT(config, "board1", 0, "isabus", pc_isa16_cards, "fdc_smc", true);
-	ISA16_SLOT(config, "board2", 0, "isabus", pc_isa16_cards, "comat", true);
-	ISA16_SLOT(config, "board3", 0, "isabus", pc_isa16_cards, "ide", true);
-	ISA16_SLOT(config, "board4", 0, "isabus", pc_isa16_cards, "lpt", true);
+	ISA16_SLOT(config, "board1", 0, m_isabus, pc_isa16_cards, "fdc_smc", true);
+	ISA16_SLOT(config, "board2", 0, m_isabus, pc_isa16_cards, "comat", true);
+	ISA16_SLOT(config, "board3", 0, m_isabus, pc_isa16_cards, "ide", true);
+	ISA16_SLOT(config, "board4", 0, m_isabus, pc_isa16_cards, "lpt", true);
 	// WD90C11A-LR
-	ISA16_SLOT(config, "board5", 0, "isabus", pc_isa16_cards, "wd90c11_lr", true);
-	// TODO: motherboard ISA resource for MD portion
+	ISA16_SLOT(config, "board5", 0, m_isabus, pc_isa16_cards, "wd90c11_lr", true);
+	// TODO: motherboard ISA resource for MD portion (8-bit slot?)
 	// (doesn't share anything with base except drawing power)
-	// ISA cards
-	ISA16_SLOT(config, "isa1", 0, "isabus", pc_isa16_cards, nullptr, false);
+	// TODO: reuses MD sound chip as Adlib-compatible sound card
+
+	ISA16_SLOT(config, "isa1", 0, m_isabus, pc_isa16_cards, nullptr, false);
 
 	ps2_keyboard_controller_device &keybc(PS2_KEYBOARD_CONTROLLER(config, "keybc", 12_MHz_XTAL));
 	keybc.hot_res().set("wd7600", FUNC(wd7600_device::kbrst_w));

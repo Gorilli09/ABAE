@@ -188,10 +188,10 @@ void vegaeo_state::vega(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &vegaeo_state::vega_map);
 	TIMER(config, "scantimer").configure_scanline(FUNC(vegaeo_state::eolith_speedup), "screen", 0, 1);
 
-	AT28C16(config, "at28c16", 0);
+	AT28C16(config, "at28c16");
 
 	/* video hardware */
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_refresh_hz(60);
 	m_screen->set_vblank_time(ATTOSECONDS_IN_USEC(0));
 	m_screen->set_size(512, 262);
@@ -298,7 +298,7 @@ ROM_END
 void vegaeo_state::init_vegaeo()
 {
 	// Set up the QS1000 program ROM banking, taking care not to overlap the internal RAM
-	m_qs1000->cpu().space(AS_IO).install_read_bank(0x0100, 0xffff, m_qs1000_bank);
+	m_qs1000->cpu().space(AS_DATA).install_read_bank(0x0100, 0xffff, m_qs1000_bank);
 	m_qs1000_bank->configure_entries(0, 8, memregion("qs1000:cpu")->base()+0x100, 0x10000);
 
 	init_speedup();

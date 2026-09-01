@@ -135,7 +135,7 @@ Additional notes:
 
 #include "cpu/m6502/m6502.h"
 #include "cpu/m6809/m6809.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8051.h"
 #include "machine/gen_latch.h"
 #include "sound/ymopl.h"
 #include "sound/ymopn.h"
@@ -616,7 +616,7 @@ void sidepckt_state::sidepcktb(machine_config &config)
 	m_audiocpu->set_addrmap(AS_PROGRAM, &sidepckt_state::sound_map);
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(58); // VERIFY: May be 55 or 56
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	screen.set_size(32*8, 32*8);

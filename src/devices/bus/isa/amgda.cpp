@@ -58,9 +58,9 @@ public:
 }
 
 protected:
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	u32 screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
@@ -134,7 +134,7 @@ void isa16_amgda_device::device_add_mconfig(machine_config &config)
 	// H: 24.68KHz, retrace: 8.0us
 	// V: 92Hz field, 46Hz frame
 	// 720x512, 64Kx8 video ram
-	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
+	SCREEN(config, m_screen);
 	m_screen->set_raw(44'220'000 / 2, 800, 0, 720, 600, 0, 512);
 	m_screen->set_screen_update(FUNC(isa16_amgda_device::screen_update));
 	m_screen->screen_vblank().set(
@@ -465,4 +465,4 @@ u8 isa16_amgda_device::alu(unsigned const byte) const
 
 } // anonymous namespace
 
-DEFINE_DEVICE_TYPE_PRIVATE(ISA16_AMGDA, device_isa16_card_interface, isa16_amgda_device, "isa16_amgda_device", "IBM Advanced Monochrome Graphics Display Adapter")
+DEFINE_DEVICE_TYPE_PRIVATE(ISA16_AMGDA, device_isa16_card_interface, isa16_amgda_device, "amgda", "IBM Advanced Monochrome Graphics Display Adapter")

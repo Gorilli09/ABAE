@@ -30,7 +30,7 @@
 
 #include "emu.h"
 #include "bus/rs232/rs232.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8051.h"
 #include "machine/er1400.h"
 #include "machine/scn_pci.h"
 #include "wy50kb.h"
@@ -305,7 +305,7 @@ void wy50_state::wy50(machine_config &config)
 {
 	I8031(config, m_maincpu, 11_MHz_XTAL); // SAB8031P or SCN8031A
 	m_maincpu->set_addrmap(AS_PROGRAM, &wy50_state::prg_map);
-	m_maincpu->set_addrmap(AS_IO, &wy50_state::io_map);
+	m_maincpu->set_addrmap(AS_DATA, &wy50_state::io_map);
 	m_maincpu->port_in_cb<1>().set(FUNC(wy50_state::p1_r));
 	m_maincpu->port_out_cb<1>().set(FUNC(wy50_state::p1_w));
 	m_maincpu->port_in_cb<3>().set(FUNC(wy50_state::p3_r));
@@ -315,7 +315,7 @@ void wy50_state::wy50(machine_config &config)
 
 	ER1400(config, m_earom);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_color(rgb_t::green());
 	screen.set_raw(68.85_MHz_XTAL / 3, 102 * 10, 0, 80 * 10, 375, 0, 338);
 	//screen.set_raw(68.85_MHz_XTAL / 2, 170 * 9, 0, 132 * 9, 375, 0, 338);

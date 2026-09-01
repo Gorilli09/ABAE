@@ -60,7 +60,7 @@ Measurements from actual PCB:
 #include "gaelco_ds5002fp.h"
 
 #include "cpu/m68000/m68000.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/ds5002fp.h"
 #include "machine/74259.h"
 #include "machine/watchdog.h"
 #include "sound/okim6295.h"
@@ -69,6 +69,8 @@ Measurements from actual PCB:
 #include "screen.h"
 #include "speaker.h"
 #include "tilemap.h"
+
+#include "endianness.h"
 
 
 namespace {
@@ -534,7 +536,7 @@ void thoop2_state::thoop2(machine_config &config)
 	WATCHDOG_TIMER(config, "watchdog");
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(59.24);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); // not accurate
 	screen.set_size(32*16, 32*16);

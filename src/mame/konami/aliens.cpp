@@ -85,8 +85,8 @@ private:
 
 K052109_CB_MEMBER(aliens_state::tile_callback)
 {
-	*code |= ((*color & 0x3f) << 8) | (bank << 14);
-	*color = layer * 4 + ((*color & 0xc0) >> 6);
+	code |= ((color & 0x3f) << 8) | (bank << 14);
+	color = layer * 4 + ((color & 0xc0) >> 6);
 }
 
 
@@ -102,20 +102,20 @@ K051960_CB_MEMBER(aliens_state::sprite_callback)
 
 	/* The PROM allows for mixed priorities, where sprites would have
 	   priority over text but not on one or both of the other two planes. */
-	switch (*color & 0x70)
+	switch (color & 0x70)
 	{
-		case 0x10: *priority = 0x00; break;                                    // over ABF
-		case 0x00: *priority = GFX_PMASK_4; break;                             // over AB, not F
-		case 0x40: *priority = GFX_PMASK_4 | GFX_PMASK_2; break;               // over A, not BF
+		case 0x10: priority = 0x00; break;                                    // over ABF
+		case 0x00: priority = GFX_PMASK_4; break;                             // over AB, not F
+		case 0x40: priority = GFX_PMASK_4 | GFX_PMASK_2; break;               // over A, not BF
 		case 0x20:
-		case 0x60: *priority = GFX_PMASK_4 | GFX_PMASK_2 | GFX_PMASK_1; break; // over -, not ABF
-		case 0x50: *priority = GFX_PMASK_2; break;                             // over AF, not B
+		case 0x60: priority = GFX_PMASK_4 | GFX_PMASK_2 | GFX_PMASK_1; break; // over -, not ABF
+		case 0x50: priority = GFX_PMASK_2; break;                             // over AF, not B
 		case 0x30:
-		case 0x70: *priority = GFX_PMASK_2 | GFX_PMASK_1; break;               // over F, not AB
+		case 0x70: priority = GFX_PMASK_2 | GFX_PMASK_1; break;               // over F, not AB
 	}
-	*code |= (*color & 0x80) << 6;
-	*color = sprite_colorbase + (*color & 0x0f);
-	*shadow = 0;    // shadows are not used by this game
+	code |= (color & 0x80) << 6;
+	color = sprite_colorbase + (color & 0x0f);
+	shadow = 0;    // shadows are not used by this game
 }
 
 
@@ -304,7 +304,7 @@ void aliens_state::aliens(machine_config &config)
 	WATCHDOG_TIMER(config, "watchdog");
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(24_MHz_XTAL / 4, 384, 0+16, 320-16, 264, 16, 240); // measured 59.17
 	screen.set_screen_update(FUNC(aliens_state::screen_update));
 	screen.set_palette("palette");

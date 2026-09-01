@@ -419,7 +419,8 @@ void sh7604_device::sh2_timer_activate()
 		}
 		else
 		{
-			logerror("SH2.%s: Timer event in %d cycles of external clock", tag(), max_delta);
+			// TODO: saturn:pulirula on slave CPU (0 cycles)
+			logerror("SH2.%s: Timer event in %d cycles of external clock\n", tag(), max_delta);
 		}
 	}
 }
@@ -1036,7 +1037,7 @@ void sh7604_device::vcra_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 
 uint16_t sh7604_device::vcrb_r()
 {
-	return m_vcrb;
+	return m_vcrb & 0x7f7f;
 }
 
 void sh7604_device::vcrb_w(offs_t offset, uint16_t data, uint16_t mem_mask)
@@ -1067,7 +1068,7 @@ uint16_t sh7604_device::vcrd_r()
 void sh7604_device::vcrd_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 {
 	COMBINE_DATA(&m_vcrd);
-	m_irq_vector.fov = (m_vcrc >> 8) & 0x7f;
+	m_irq_vector.fov = (m_vcrd >> 8) & 0x7f;
 	sh2_recalc_irq();
 }
 
@@ -1083,16 +1084,17 @@ void sh7604_device::vcrwdt_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 	sh2_recalc_irq();
 }
 
+// VCRDIV is a word register where bits 6-0 have a meaning, reads back written word value
 uint32_t sh7604_device::vcrdiv_r()
 {
-	return m_vcrdiv & 0x7f;
+	return m_vcrdiv & 0xffff;
 }
 
 void sh7604_device::vcrdiv_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 {
 	COMBINE_DATA(&m_vcrdiv);
 	// TODO: unemulated, level is seemingly not documented/settable?
-	m_irq_vector.divu = data & 0x7f;
+	m_irq_vector.divu = m_vcrdiv & 0x7f;
 	sh2_recalc_irq();
 }
 
@@ -1102,21 +1104,20 @@ void sh7604_device::vcrdiv_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 
 uint32_t sh7604_device::dvcr_r()
 {
-	return (m_divu_ovfie ? 2 : 0) | (m_divu_ovf ? 1 : 0);
+	return (m_divu_ovfie << 1) | (m_divu_ovf << 0);
 }
 
 void sh7604_device::dvcr_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 {
 	if (ACCESSING_BITS_0_7)
 	{
-		if (data & 1)
-			m_divu_ovf = false;
-		if (data & 2)
-		{
-			m_divu_ovfie = BIT(data, 1);
-			if (m_divu_ovfie)
-				LOG("SH2: unemulated DIVU OVF interrupt enable\n");
-		}
+		// both bits are regular r/w
+		// - vblokbrk/sarukani writes a '0' to clear a divide by zero OVF when beating
+		//   a stage with game timer <= 10
+		m_divu_ovf = BIT(data, 0);
+		m_divu_ovfie = BIT(data, 1);
+		if (m_divu_ovfie)
+			LOG("SH2: unemulated DIVU OVF interrupt enable\n");
 		sh2_recalc_irq();
 	}
 }
@@ -1138,6 +1139,7 @@ uint32_t sh7604_device::dvdnt_r()
 
 void sh7604_device::dvdnt_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 {
+	// TODO: this is really a separate register that happens to be shared with DVDNTL
 	COMBINE_DATA(&m_dvdntl);
 	int32_t a = m_dvdntl;
 	int32_t b = m_dvsr;
@@ -1146,6 +1148,7 @@ void sh7604_device::dvdnt_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 	{
 		m_dvdntl = a / b;
 		m_dvdnth = a % b;
+		// TODO: 40 cycles
 	}
 	else
 	{
@@ -1153,6 +1156,7 @@ void sh7604_device::dvdnt_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 		m_dvdntl = 0x7fffffff;
 		m_dvdnth = 0x7fffffff;
 		sh2_recalc_irq();
+		// TODO: 8 cycles
 	}
 }
 
@@ -1186,11 +1190,13 @@ void sh7604_device::dvdntl_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 			m_dvdntl = 0x7fffffff;
 			m_dvdnth = 0x7fffffff;
 			sh2_recalc_irq();
+			// TODO: 6 cycles, plenty of these in saturn:vkyoute2
 		}
 		else
 		{
 			m_dvdntl = q;
 			m_dvdnth = a % b;
+			// TODO: 39 cycles
 		}
 	}
 	else
@@ -1199,6 +1205,7 @@ void sh7604_device::dvdntl_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 		m_dvdntl = 0x7fffffff;
 		m_dvdnth = 0x7fffffff;
 		sh2_recalc_irq();
+		// TODO: 6 cycles
 	}
 }
 
@@ -1356,6 +1363,8 @@ void sh7604_device::ccr_w(uint8_t data)
 	m_ccr = data;
 }
 
+// BCR1/BCR2 are really 16-bit wide, when accessed as dword the upper part is used as unlock
+// method (0xa55axxxx) and reads back 0.
 uint32_t sh7604_device::bcr1_r()
 {
 	return (m_bcr1 & ~0xe008) | (m_is_slave ? 0x8000 : 0);
@@ -1363,7 +1372,16 @@ uint32_t sh7604_device::bcr1_r()
 
 void sh7604_device::bcr1_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 {
-	COMBINE_DATA(&m_bcr1);
+	if (ACCESSING_BITS_0_31)
+	{
+		if ((data & 0xffff0000) == 0xa55a0000)
+		{
+			COMBINE_DATA(&m_bcr1);
+			m_bcr1 &= 0xffff;
+		}
+	}
+	else if (ACCESSING_BITS_0_15)
+		COMBINE_DATA(&m_bcr1);
 }
 
 uint32_t sh7604_device::bcr2_r()
@@ -1373,7 +1391,16 @@ uint32_t sh7604_device::bcr2_r()
 
 void sh7604_device::bcr2_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 {
-	COMBINE_DATA(&m_bcr2);
+	if (ACCESSING_BITS_0_31)
+	{
+		if ((data & 0xffff0000) == 0xa55a0000)
+		{
+			COMBINE_DATA(&m_bcr2);
+			m_bcr2 &= 0xffff;
+		}
+	}
+	else if (ACCESSING_BITS_0_15)
+		COMBINE_DATA(&m_bcr2);
 }
 
 uint32_t sh7604_device::wcr_r()
@@ -1608,7 +1635,7 @@ void sh7604_device::dmaor_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 	if (ACCESSING_BITS_0_7)
 	{
 		uint8_t old = m_dmaor & 0xf;
-		m_dmaor = (data & ~6) | (old & m_dmaor & 6); // TODO: should this be old & data & 6? bug?
+		m_dmaor = (data & ~6) | (old & data & 6);
 		sh2_dmac_check(0);
 		sh2_dmac_check(1);
 	}

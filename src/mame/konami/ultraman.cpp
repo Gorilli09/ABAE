@@ -99,9 +99,9 @@ K051960_CB_MEMBER(ultraman_state::sprite_callback)
 {
 	enum { sprite_colorbase = 3072 / 16 };
 
-	*priority = (*color & 0x80) ? 0 : GFX_PMASK_1;
-	*color = sprite_colorbase + ((*color & 0x7e) >> 1);
-	*shadow = 0;
+	priority = (color & 0x80) ? 0 : GFX_PMASK_1;
+	color = sprite_colorbase + ((color & 0x7e) >> 1);
+	shadow = 0;
 }
 
 
@@ -116,8 +116,8 @@ K051316_CB_MEMBER(ultraman_state::zoom_callback)
 {
 	enum { zoom_colorbase = (1024 * Which) / 16 };
 
-	*code |= ((*color & 0x07) << 8) | (m_bank[Which] << 11);
-	*color = zoom_colorbase + ((*color & 0xf8) >> 3);
+	code |= ((color & 0x07) << 8) | (m_bank[Which] << 11);
+	color = zoom_colorbase + ((color & 0xf8) >> 3);
 }
 
 /***************************************************************************
@@ -365,7 +365,7 @@ void ultraman_state::ultraman(machine_config &config)
 	WATCHDOG_TIMER(config, "watchdog");
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(24_MHz_XTAL / 4, 384, 0+16, 320-16, 264, 16, 240);
 	screen.set_screen_update(FUNC(ultraman_state::screen_update));
 	screen.set_palette("palette");
@@ -448,7 +448,7 @@ ROM_START( ultraman )
 	ROM_LOAD( "910-a06.c06", 0x000000, 0x040000, CRC(28fa99c9) SHA1(54663d79ee105ac18d6ba01333a52e3732f2e5fe) )
 ROM_END
 
-}
+} // anonymous namespace
 
 
 GAME( 1991, ultraman, 0, ultraman, ultraman, ultraman_state, empty_init, ROT0, "Banpresto / Bandai", "Ultraman (Japan)", MACHINE_SUPPORTS_SAVE )

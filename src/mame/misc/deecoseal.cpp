@@ -8,7 +8,7 @@
 
 #include "emu.h"
 #include "cpu/i86/i186.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i80c51.h"
 #include "screen.h"
 #include "emupal.h"
 #include "video/upd7220.h"
@@ -149,7 +149,7 @@ void deecoseal_state::deecoseal(machine_config &config)
 
 	SCN2681(config, m_duart, XTAL(3'686'400)); // scn2692
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_LCD, rgb_t::amber()));
+	screen_device &screen(SCREEN(config, "screen").set_lcd().set_color(rgb_t::amber()));
 	screen.set_raw(XTAL(16'257'000), 848, 0, 640, 440, 0, 400);
 	screen.set_screen_update(m_crtc, FUNC(upd7220_device::screen_update));
 }

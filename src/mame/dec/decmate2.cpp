@@ -51,7 +51,7 @@
 #include "emu.h"
 #include "bus/rs232/rs232.h"
 #include "cpu/pdp8/hd6120.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8051.h"
 #include "imagedev/floppy.h"
 #include "machine/ay31015.h"
 #include "machine/clock.h"
@@ -879,7 +879,7 @@ void decmate2_state::pc278(machine_config &config)
 	m_maincpu->strtup_callback().set_constant(0);
 
 	I8051(config, m_rxcpu, 16_MHz_XTAL / 2);
-	m_rxcpu->set_addrmap(AS_IO, &decmate2_state::rx_map);
+	m_rxcpu->set_addrmap(AS_DATA, &decmate2_state::rx_map);
 	m_rxcpu->port_in_cb<1>().set(FUNC(decmate2_state::rx_intr_r));
 	m_rxcpu->port_out_cb<1>().set(FUNC(decmate2_state::rx_sel_w));
 	m_rxcpu->port_in_cb<2>().set(FUNC(decmate2_state::rx_rdy_r));
@@ -919,7 +919,7 @@ void decmate2_state::pc278(machine_config &config)
 	m_brg[1]->fr_handler().append(m_kbduart, FUNC(ay31015_device::write_tcp));
 	// TODO: other output is divided down to 100 Hz
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(15.741_MHz_XTAL, 990, 0, 800, 265, 0, 240); // 24x80, 10x10 character cell
 	//screen.set_raw(22.896_MHz_XTAL, 1440, 0, 1188, 265, 0, 240); // 24x132, 9x10 character cell?
 	screen.set_screen_update(FUNC(decmate2_state::screen_update));

@@ -6,7 +6,7 @@
  The machines need an online server to work, they won't boot up the games without it.
  More info: https://www.recreativas.org/onliner-6342-comatel
 
- -Gigabyte GA-7VKMP Rev 3.4 motherboard (VIA KM266, VIA T8235, IT8705F, RTL8100BL, ALC650, etc.).
+ -Gigabyte GA-7VKMP Rev 3.4 motherboard (VIA VT8375 KM266, VIA VT8235, IT8705F, RTL8100BL, ALC650, etc.).
  -256MB RAM PC2700 DDR
  -AMD Athlon AXDA1800DLT3C processor.
  -ATI Rage 128 Pro 32MB AGP video.
@@ -55,7 +55,7 @@ public:
 	{
 	}
 
-	void conliner(machine_config &config);
+	void conliner(machine_config &config) ATTR_COLD;
 
 private:
 	void mem_map(address_map &map) ATTR_COLD;
@@ -75,10 +75,11 @@ INPUT_PORTS_END
 
 void conliner_state::conliner(machine_config &config)
 {
+	// Socket A PGA462
 	PENTIUM(config, m_maincpu, 166'000'000); // Actually an AMD Athlon AXDA1800DLT3C
 	m_maincpu->set_addrmap(AS_PROGRAM, &conliner_state::mem_map);
 
-	PCI_ROOT(config, "pci", 0);
+	PCI_ROOT(config, "pci");
 	// ...
 }
 
@@ -99,7 +100,7 @@ ROM_START(onlinertp)
 	ROM_LOAD("ht27c512.u5",   0x00000, 0x10000, CRC(6b0e2837) SHA1(fca2609c12b595df7c4f8e2b38b3cb089983e523)) // ATI RAGE 128 PRO AGP
 ROM_END
 
-} // Anonymous namespace
+} // anonymous namespace
 
 //   YEAR  NAME       PARENT  MACHINE   INPUT     CLASS           INIT        ROT   COMPANY                    FULLNAME               FLAGS
 GAME(200?, onlinertp, 0,      conliner, conliner, conliner_state, empty_init, ROT0, "Comatel / Atata Systems", "Onliner Touch Party", MACHINE_NO_SOUND | MACHINE_NOT_WORKING) // v4.222.493, with v4.44.450 update

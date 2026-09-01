@@ -63,7 +63,7 @@ protected:
 	virtual void write_c0nx(u8 offset, u8 data) override;
 	virtual u8 read_c800(u16 offset) override;
 	virtual void write_c800(u16 offset, u8 data) override;
-	virtual bool take_c800() override { return true; }
+	virtual bool take_c800() const override { return true; }
 
 private:
 	required_device<mc6845_device> m_crtc;
@@ -85,7 +85,7 @@ private:
 
 void a2bus_suprterminal_device::device_add_mconfig(machine_config &config)
 {
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_raw(17.43_MHz_XTAL, 1116, 0, 720, 260, 0, 216);
 	screen.set_screen_update("crtc", FUNC(mc6845_device::screen_update));
 

@@ -7,7 +7,7 @@
 ***************************************************************************/
 
 #include "emu.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i80c51.h"
 #include "video/hd44780.h"
 #include "emupal.h"
 #include "screen.h"
@@ -58,9 +58,9 @@ void qmsirius_state::qmsirius(machine_config &config)
 {
 	P80C552(config, m_maincpu, 12_MHz_XTAL); // PCB80C552-5 16WP
 	m_maincpu->set_addrmap(AS_PROGRAM, &qmsirius_state::prog_map);
-	m_maincpu->set_addrmap(AS_IO, &qmsirius_state::ext_map);
+	m_maincpu->set_addrmap(AS_DATA, &qmsirius_state::ext_map);
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_LCD));
+	screen_device &screen(SCREEN(config, "screen").set_lcd());
 	screen.set_refresh_hz(60);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(2500)); /* not accurate */
 	screen.set_screen_update("lcdc", FUNC(hd44780_device::screen_update));

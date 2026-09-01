@@ -28,7 +28,7 @@
 
 #include "emu.h"
 //#include "bus/rs232/rs232.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8051.h"
 #include "machine/eeprompar.h"
 #include "video/scn2674.h"
 #include "screen.h"
@@ -163,14 +163,14 @@ void adm11_state::adm12(machine_config &config)
 {
 	I8031(config, m_maincpu, 11.0592_MHz_XTAL); // P8031AH
 	m_maincpu->set_addrmap(AS_PROGRAM, &adm11_state::prog_map);
-	m_maincpu->set_addrmap(AS_IO, &adm11_state::ext_map);
+	m_maincpu->set_addrmap(AS_DATA, &adm11_state::ext_map);
 	m_maincpu->port_in_cb<1>().set(FUNC(adm11_state::p1_r));
 	m_maincpu->port_out_cb<1>().set(FUNC(adm11_state::p1_w));
 	// TODO: RXD/TXD are serial communications; INT0 is serial keyboard data
 
 	EEPROM_2804(config, "eeprom"); // X2804AP
 
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_color(rgb_t::green());
 	screen.set_raw(15.93_MHz_XTAL, 900, 0, 720, 295, 0, 275); // 17.7 kHz horizontal
 	screen.set_screen_update("avdc", FUNC(scn2674_device::screen_update));

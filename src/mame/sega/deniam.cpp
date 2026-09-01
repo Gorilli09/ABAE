@@ -541,7 +541,7 @@ void deniamb_state::oki_rom_bank_w(u8 data)
 
 void deniamc_state::oki_rom_bank_w(u8 data)
 {
-	if ((data & 0xfe) != 0) popmessage("OKI bank was not 0 or 1! contact MAMEDEV!");
+	if ((data & 0xfe) != 0) popmessage("OKI bank %02x", data);
 	m_oki->set_rom_bank(data & 0x01);
 }
 
@@ -710,7 +710,7 @@ void deniamc_state::deniam16c(machine_config &config)
 	m_maincpu->set_vblank_int("screen", FUNC(deniamb_state::irq4_line_assert));
 
 	// video hardware
-	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
+	screen_device &screen(SCREEN(config, "screen"));
 	screen.set_refresh_hz(60);
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(0));
 	screen.set_size(512, 256);
