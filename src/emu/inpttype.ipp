@@ -607,29 +607,29 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    COIN10,              N_p("input-name", "Coin 10"),                input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    COIN11,              N_p("input-name", "Coin 11"),                input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    COIN12,              N_p("input-name", "Coin 12"),                input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    BILL1,               N_p("input-name", "Banknote"),             input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    BILL1,               N_p("input-name", "Banknote validator"),             input_seq(KEYCODE_BACKSPACE) ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_SERVICE \
 		CORE_INPUT_TYPES_BEGIN(service) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE1,            N_p("input-name", "Service 1"),              input_seq(KEYCODE_TAB) ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE2,            N_p("input-name", "Service 2"),              input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE3,            N_p("input-name", "Service 3"),              input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE4,            N_p("input-name", "Service 4"),              input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE5,            N_p("input-name", "Service 5"),              input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE6,            N_p("input-name", "Service 6"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE1,            N_p("input-name", "Service credit 1"),              input_seq(KEYCODE_TAB) ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE2,            N_p("input-name", "Service credit 2"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE3,            N_p("input-name", "Service credit 3"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE4,            N_p("input-name", "Service credit 4"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE5,            N_p("input-name", "Service credit 5"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE6,            N_p("input-name", "Service credit 6"),              input_seq() ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_OTHER \
 		CORE_INPUT_TYPES_BEGIN(other) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    POWER_ON,            N_p("input-name", "Power On"),               input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    POWER_OFF,           N_p("input-name", "Power Off"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    POWER_ON,            N_p("input-name", "Power on"),               input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    POWER_OFF,           N_p("input-name", "Power off"),              input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE,             N_p("input-name", "Test"),                   input_seq(KEYCODE_ENTER) ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    TILT,                N_p("input-name", "Tilt"),                   input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    DOOR,                N_p("input-name", "Door Interlock"),         input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    MEMORY_RESET,        N_p("input-name", "Memory Reset"),           input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    VOLUME_DOWN,         N_p("input-name", "Volume Down"),            input_seq(KEYCODE_SCAN174) ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    VOLUME_UP,           N_p("input-name", "Volume Up"),              input_seq(KEYCODE_SCAN176) ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    TILT,                N_p("input-name", "Slam/tilt"),                   input_seq(KEYCODE_T) ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    DOOR,                N_p("input-name", "Coindoor interlock"),         input_seq(KEYCODE_O) ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    MEMORY_RESET,        N_p("input-name", "Memory reset"),           input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    VOLUME_DOWN,         N_p("input-name", "Volume down"),            input_seq(KEYCODE_MINUS, input_seq::or_code, KEYCODE_SCAN174) ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    VOLUME_UP,           N_p("input-name", "Volume up"),              input_seq(KEYCODE_EQUALS, input_seq::or_code, KEYCODE_SCAN176) ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_AD_STICK_X \
