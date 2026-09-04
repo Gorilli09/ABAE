@@ -718,7 +718,7 @@ namespace {
 
 #define CORE_INPUT_TYPES_PEDAL3 \
 		CORE_INPUT_TYPES_BEGIN(pedal3) \
-		INPUT_PORT_ANALOG_TYPE(   1, PLAYER1,  PEDAL3,              N_p("input-name", "%p Pedal 3"),             input_seq(), input_seq(), input_seq(KEYCODE_LCTRL) ) \
+		INPUT_PORT_ANALOG_TYPE(   1, PLAYER1,  PEDAL3,              N_p("input-name", "%p Pedal 3"),             input_seq(), input_seq(), input_seq(KEYCODE_LCONTROL) ) \
 		INPUT_PORT_ANALOG_TYPE(   2, PLAYER2,  PEDAL3,              N_p("input-name", "%p Pedal 3"),             input_seq(), input_seq(), input_seq(KEYCODE_Q) ) \
 		INPUT_PORT_ANALOG_TYPE(   3, PLAYER3,  PEDAL3,              N_p("input-name", "%p Pedal 3"),             input_seq(), input_seq(), input_seq(KEYCODE_ENTER) ) \
 		INPUT_PORT_ANALOG_TYPE(   4, PLAYER4,  PEDAL3,              N_p("input-name", "%p Pedal 3"),             input_seq(), input_seq(), input_seq(KEYCODE_ENTER_PAD) ) \
