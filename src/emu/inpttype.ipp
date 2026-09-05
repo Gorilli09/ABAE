@@ -625,8 +625,8 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    POWER_ON,            N_p("input-name", "Power on"),               input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    POWER_OFF,           N_p("input-name", "Power off"),              input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    SERVICE,             N_p("input-name", "Test"),                   input_seq(KEYCODE_ENTER) ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    TILT,                N_p("input-name", "Slam/tilt"),                   input_seq(KEYCODE_T) ) \
-		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    DOOR,                N_p("input-name", "Coindoor interlock"),         input_seq(KEYCODE_O) ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    TILT,                N_p("input-name", "Coin door slam/tilt"),                   input_seq(KEYCODE_T) ) \
+		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    DOOR,                N_p("input-name", "Coin door interlock"),         input_seq(KEYCODE_O) ) \
 		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    MEMORY_RESET,        N_p("input-name", "Memory reset"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    VOLUME_DOWN,         N_p("input-name", "Volume down"),            input_seq(KEYCODE_MINUS, input_seq::or_code, KEYCODE_SCAN174) ) \
 		INPUT_PORT_DIGITAL_TYPE(  0, OTHER,    VOLUME_UP,           N_p("input-name", "Volume up"),              input_seq(KEYCODE_EQUALS, input_seq::or_code, KEYCODE_SCAN176) ) \
