@@ -2991,8 +2991,8 @@ static INPUT_PORTS_START( ridgera )
 	/*  1 3 5   When the cabinet is set to Deluxe, the stick shift is basically
 	    |-|-|   an 8-way joystick that locks into place.
 	    2 4 6   Standard (default) setup uses a racing shifter like in Ace Driver. */
-	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_BUTTON6 )    PORT_NAME("Shift Down")
-	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_BUTTON5 )  PORT_NAME("Shift Up")
+	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_JOYSTICK_UP )    PORT_NAME("Shift Down")
+	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN )  PORT_NAME("Shift Up")
 	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT )  PORT_NAME("Shift Left")  // not used in Standard Cabinet
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_JOYSTICK_RIGHT ) PORT_NAME("Shift Right") // "
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_NAME("Clutch Pedal")       // "
