@@ -21,6 +21,10 @@ NOTES:
 -->
 <softwarelist name="3do" description="3DO Interactive Multiplayer CD-ROMs">
 
+	<!-- TODO: 3datlas: 3D Atlas (USA) -->
+	<!-- https://redump.info/disc/47823 -->
+	<!-- ... -->
+
 	<!-- https://redump.info/disc/59952 -->
 	<software name="slayer" supported="no">
 		<!-- AD&D "2nd Edition" -->
@@ -166,6 +170,10 @@ Laggy inputs on opponent select, looks stuck
 		</part>
 	</software>
 
+	<!-- https://redump.info/disc/19365 -->
+	<!-- TODO: crshburn: Crash 'n Burn (USA "not for resale" version, a.k.a. the only English version) -->
+	<!-- ... -->
+
 	<!-- https://redump.info/disc/49372 -->
 	<software name="demoman" supported="no">
 		<description>Demolition Man (USA, Europe)</description>
@@ -278,12 +286,17 @@ Hangs on Puzzle, no [Player] input works
 		</part>
 	</software>
 
+	<!-- TODO: goalfh: Goal FH / Goal Field Hunter (Japan) -->
+	<!-- https://redump.info/disc/39817 -->
+	<!-- ... -->
+
 	<!-- https://redump.info/disc/39872 -->
 	<software name="oyajihmj" supported="no">
 		<description>Oyaji Hunter Mahjong (Japan)</description>
 		<year>1995</year>
 		<publisher>Warp</publisher>
 		<notes><![CDATA[
+Has gameplay RNG bugs, background is always cyan and starting hands are always same-y, [ARM]?
 [DSPP] non FMV portions sounds ugly
 [Madam] PIXC example on title screen, ugly 1bpp CEL in versus screen, doesn't repeat CEL background properly in gameplay
 Bonus section (3rd option) is untested
@@ -338,7 +351,7 @@ Not extensively tested
 		</part>
 	</software>
 
-	<!-- TODO: Shanghai Banri no Choujou (Japan version) released by Eletronic Arts Victor -->
+	<!-- TODO: Shanghai Banri no Choujou (Japan version) released by Electronic Arts Victor -->
 
 	<!-- https://redump.info/disc/59953 -->
 	<software name="cpubach" supported="no">
@@ -356,6 +369,10 @@ Not extensively tested
 			</diskarea>
 		</part>
 	</software>
+
+	<!-- TODO: soccerkd: Soccer Kid (USA) -->
+	<!-- https://redump.info/disc/35971 -->
+	<!-- ... -->
 
 	<!-- TODO: ssf2t published by Panasonic overseas -->
 
@@ -382,6 +399,10 @@ Eventually requires support for [Player] Capcom fighting pad
 			</diskarea>
 		</part>
 	</software>
+
+	<!-- TODO: vgoalsc96: V Goal Soccer '96 (Japan) -->
+	<!-- https://redump.info/disc/57610 -->
+	<!-- ... -->
 
 	<!-- https://redump.info/disc/58378/ -->
 	<software name="vpreika" supported="no">

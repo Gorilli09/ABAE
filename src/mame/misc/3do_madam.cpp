@@ -16,6 +16,7 @@
 #define VERBOSE (LOG_GENERAL | LOG_MMU)
 //#define VERBOSE (LOG_VDLP)
 //#define VERBOSE (LOG_CEL | LOG_REGIS)
+//#define VERBOSE (LOG_MULT | LOG_MULTV)
 //#define LOG_OUTPUT_FUNC osd_printf_info
 
 #include "logmacro.h"
@@ -68,7 +69,7 @@ void madam_device::device_start()
 	// TODO: reduce footprint
 	// - a possible Cel this big should tank the system a lot
 	// - there's just not enough work RAM in base system
-	m_cel.buffer.resize(0x1000*0x800);
+	m_cel.buffer.resize(0x400 * 0x800);
 
 	save_item(NAME(m_pip));
 	save_item(NAME(m_fence));
@@ -798,15 +799,28 @@ TIMER_CALLBACK_MEMBER(madam_device::cel_tick_cb)
 			m_cel.skip = !!BIT(m_cel.current_ccb, 31);
 			m_cel.last = !!BIT(m_cel.current_ccb, 30);
 			const bool npabs = !!BIT(m_cel.current_ccb, 29);
-			// FIXME: as below
-			if (!npabs && m_cel.next_ptr && !m_cel.last)
+
+			const u32 next_addr = m_dma32_read_cb(m_cel.address + 0x04);
+
+			if (npabs)
+				m_cel.next_ptr = next_addr;
+			else
 			{
-				popmessage("CEL actual relative next_ptr use at %08x (current %08x -> %08x)", m_cel.address, m_cel.next_ptr, m_dma32_read_cb(m_cel.address + 0x04));
-				m_statbits |= (1 << 6);
-				cel_stop_w(0, 0, 0xffffffff);
-				return;
+				// - crshburn uses this as soon as it starts using the engine
+				LOGCEL("    RELNEXT %08x\n", next_addr);
+				// TODO: is offset dependant on preamble words?
+				// also three relative pointers all with their own offset, wtf
+				m_cel.next_ptr = m_cel.address + (s32)next_addr + 8;
 			}
-			m_cel.next_ptr = m_dma32_read_cb(m_cel.address + 0x04);
+
+			// safety net for potentially errand pointer(s) that would cause very bad side effects.
+			// TODO: it should cause an ARM ABORT with PrivBits set (if ever implemented by HW)
+			if (!m_cel.last && (!m_cel.next_ptr || m_cel.next_ptr & ~0x3F'FFFF))
+			{
+				// - orbatak: npabs=1, essentially everywhere
+				LOGCEL("CEL engine bad next_ptr at %08x with npabs %d (current %08x next_addr %08x)\n", m_cel.address, npabs, m_cel.next_ptr, next_addr);
+				m_cel.last = 1;
+			}
 
 			if (m_cel.skip && m_cel.last)
 			{
@@ -891,16 +905,22 @@ TIMER_CALLBACK_MEMBER(madam_device::cel_tick_cb)
 				LOGCEL("    RELSOURCE %08x\n", source_addr);
 				m_cel.source_ptr = m_cel.address + (s32)source_addr - 4;
 			}
+			tick_time ++;
 
-			const u32 plut_addr = m_dma32_read_cb(m_cel.address + 0x0c);
-			if (ppabs)
-				m_cel.plut_ptr = plut_addr;
-			else
+			// plut fetch is optional
+			// TODO: find use cases
+			if (ldplut)
 			{
-				LOGCEL("    RELPLUT %08x\n", plut_addr);
-				m_cel.plut_ptr = m_cel.address + (s32)plut_addr + 0x10;
+				const u32 plut_addr = m_dma32_read_cb(m_cel.address + 0x0c);
+				if (ppabs)
+					m_cel.plut_ptr = plut_addr;
+				else
+				{
+					LOGCEL("    RELPLUT %08x\n", plut_addr);
+					m_cel.plut_ptr = m_cel.address + (s32)plut_addr + 0x10;
+				}
+				tick_time ++;
 			}
-			tick_time += 2;
 			LOGCEL("    NEXTPTR %08x SOURCEPTR %08x PLUTPTR %08x\n", m_cel.next_ptr, m_cel.source_ptr, m_cel.plut_ptr);
 
 			// - cpquazar uses all the !ldsize/!ldprs/!ldpixc in gameplay, minus !yoxy
@@ -1007,7 +1027,12 @@ TIMER_CALLBACK_MEMBER(madam_device::cel_tick_cb)
 		{
 			tick_time = 1;
 
-			const u16 vcnt = ((m_cel.pre0 >> 6) & 0xfff) + 1;
+			// bits 31-28, 23-16 and 5 are <reserved>
+
+			// vcnt is 15-6
+			// - soccerkd sets reserved part for background in gamemplay, causing corruption
+			//   if not masked properly.
+			const u16 vcnt = ((m_cel.pre0 >> 6) & 0x3ff) + 1;
 			const bool uncoded = !!BIT(m_cel.pre0, 4);
 			const u8 bpp = (m_cel.pre0 >> 0) & 0x7;
 			static const char *const BPP_VALUES[8] = { "<0 reserved>", "1bpp", "2bpp", "4bpp", "6bpp", "8bpp", "16bpp", "<7 reserved>" };
@@ -1171,13 +1196,12 @@ std::tuple<u16, u32> madam_device::get_unemulated(u32 ptr, u8 frac)
 	return std::make_tuple(0, ptr + 1);
 };
 
-// - sailormn character select cursor
-// - slayer
+// - demoman crosshair in gameplay
 std::tuple<u16, u32> madam_device::get_coded_1bpp(u32 ptr, u8 frac)
 {
 	u8 idx;
 	const u32 plut_ptr = m_cel.plut_ptr;
-	std::tie(idx, ptr) = fetch_byte(ptr, frac);
+	std::tie(idx, std::ignore) = fetch_byte(ptr, frac);
 
 	// idx >>= 7;
 	// idx &= 0x01;
@@ -1187,12 +1211,14 @@ std::tuple<u16, u32> madam_device::get_coded_1bpp(u32 ptr, u8 frac)
 	return std::make_tuple((m_dma8_read_cb(plut_ptr + idx) << 8) | m_dma8_read_cb(plut_ptr + idx + 1), ptr);
 }
 
-// - sailormn cursor in character select (broken)
+// - sailormn cursor in character select
+// - goalfh copyright lettering
+// - orbatak score display
 std::tuple<u16, u32> madam_device::get_coded_2bpp(u32 ptr, u8 frac)
 {
 	u8 idx;
 	const u32 plut_ptr = m_cel.plut_ptr;
-	std::tie(idx, ptr) = fetch_byte(ptr, frac);
+	std::tie(idx, std::ignore) = fetch_byte(ptr, frac);
 
 	// idx >>= 6;
 	// idx &= 0x03;
@@ -1318,7 +1344,7 @@ u32 madam_device::cel_decompress()
 	}
 
 	u16 tlhpcnt = 1;
-	const u16 pitch = 0x1000;
+	const u16 pitch = 0x400;
 	const u8 woffset_type = bpp >= 5;
 	const u8 woffset_inc = woffset_type + 1;
 	// Reminders:
@@ -1327,6 +1353,9 @@ u32 madam_device::cel_decompress()
 	static const u8 frac_bits[8] = { 0, 1, 2, 4, 6, 8, 16, 0 };
 	const u8 frac_inc = frac_bits[bpp];
 	const u8 actual_rle_mode = (bpp << 1) | uncoded;
+	// 1bpp and 2bpp are special: they have more than 1 intermediate byte step when drawing pixels.
+	// For now we std::ignore the return pointer and count manually from here instead.
+	const bool frac_byte_step = bpp == 1 || bpp == 2;
 
 	for (u16 yline = 0; yline < vcnt; yline ++)
 	{
@@ -1375,6 +1404,9 @@ u32 madam_device::cel_decompress()
 					frac_bit += frac_inc;
 					frac_bit &= 7;
 
+					if (!frac_bit && frac_byte_step)
+						line_ptr ++;
+
 					for (src = 0; src < num_bytes; src++)
 						m_cel.buffer[yline * pitch + ((src + xpos) % pitch)] = pixel_data;
 
@@ -1389,6 +1421,9 @@ u32 madam_device::cel_decompress()
 						std::tie(pixel_data, line_ptr) = (this->*fetch_rle_table[actual_rle_mode])(line_ptr, frac_bit);
 						frac_bit += frac_inc;
 						frac_bit &= 7;
+						if (!frac_bit && frac_byte_step)
+							line_ptr ++;
+
 						tick_time ++;
 						m_cel.buffer[yline * pitch + ((src + xpos) % pitch)] = pixel_data;
 					}
@@ -1633,7 +1668,7 @@ u16 madam_device::get_pixel_16bpp_uncoded_lrform1(int x, int y, u16 woffset)
 
 u16 madam_device::get_pixel_packed(int x, int y, u16 woffset)
 {
-	const u16 pitch = 0x1000;
+	const u16 pitch = 0x400;
 	const u32 src_address = x + (y * pitch);
 
 	u16 src_data = m_cel.buffer[src_address];
@@ -1674,6 +1709,7 @@ void madam_device::mult_start_process_w(offs_t offset, u32 data, u32 mem_mask)
 			break;
 		}
 		// 1: 4x4 MAC
+		// TODO: 3datlas, vgoalsc96 main menu
 		// ...
 
 		// 2: 3x3 MAC
@@ -1731,6 +1767,11 @@ void madam_device::mult_start_process_w(offs_t offset, u32 data, u32 mem_mask)
 			break;
 		}
 		// 3: 3x3 MAC w/divide and multiply
+		// TODO: vgoalsc96, goalfh
+		// Sets N parameter at [32] as input (in 32.32 format?), should apply a normalization to
+		// the resulting matrix (i.e. applying mode=1 3x3 Matrix as-is will have radar-like dims)
+		// ...
+
 		// 4: 4x1 MAC
 		// 5: 1x1 MAC (4 sets)
 		// 8: CCoB conversion
