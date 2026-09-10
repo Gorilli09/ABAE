@@ -1353,17 +1353,17 @@ void ohci_usb_connector::device_start()
 INPUT_PORTS_START(xbox_controller)
 	PORT_START("ThumbstickLh") // left analog thumbstick horizontal movement
 	PORT_BIT(0xff, 0x80, IPT_AD_STICK_X) PORT_NAME("ThumbstickLh") PORT_SENSITIVITY(100) PORT_KEYDELTA(1) PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_J) PORT_CODE_INC(KEYCODE_L)
+		PORT_CODE_DEC(KEYCODE_A) PORT_CODE_INC(KEYCODE_D)
 	PORT_START("ThumbstickLv") // left analog thumbstick vertical movement
 	PORT_BIT(0xff, 0x80, IPT_AD_STICK_Y) PORT_NAME("ThumbstickLv") PORT_SENSITIVITY(100) PORT_KEYDELTA(1) PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_K) PORT_CODE_INC(KEYCODE_I)
+		PORT_CODE_DEC(KEYCODE_S) PORT_CODE_INC(KEYCODE_W)
 
 	PORT_START("ThumbstickRh") // right analog thumbstick horizontal movement
 	PORT_BIT(0xff, 0x80, IPT_AD_STICK_X) PORT_NAME("ThumbstickRh") PORT_SENSITIVITY(100) PORT_KEYDELTA(1) PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_4_PAD) PORT_CODE_INC(KEYCODE_6_PAD)
+		PORT_CODE_DEC(KEYCODE_J) PORT_CODE_INC(KEYCODE_L)
 	PORT_START("ThumbstickRv") // right analog thumbstick vertical movement
 	PORT_BIT(0xff, 0x80, IPT_AD_STICK_Y) PORT_NAME("ThumbstickRv") PORT_SENSITIVITY(100) PORT_KEYDELTA(1) PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_2_PAD) PORT_CODE_INC(KEYCODE_8_PAD)
+		PORT_CODE_DEC(KEYCODE_K) PORT_CODE_INC(KEYCODE_I)
 
 	PORT_START("DPad") // pressure sensitive directional pad
 	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_JOYSTICK_UP) PORT_NAME("DPad Up")
@@ -1373,39 +1373,39 @@ INPUT_PORTS_START(xbox_controller)
 
 	PORT_START("TriggerL") // analog trigger
 	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("TriggerL") PORT_SENSITIVITY(100) PORT_KEYDELTA(1) PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_1_PAD) PORT_CODE_INC(KEYCODE_7_PAD)
+		PORT_CODE_INC(Q)
 
 	PORT_START("TriggerR") // analog trigger
 	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("TriggerR") PORT_SENSITIVITY(100) PORT_KEYDELTA(1) PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_3_PAD) PORT_CODE_INC(KEYCODE_9_PAD)
+		PORT_CODE_INC(E)
 
 	PORT_START("Buttons") // digital buttons
 	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_BUTTON2) PORT_NAME("Start") // Start button
 	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_BUTTON1) PORT_NAME("Back") // Back button
 
-	PORT_START("AGreen") // analog button
-	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("A-Green") PORT_SENSITIVITY(100) PORT_KEYDELTA(32)  PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_A) PORT_CODE_INC(KEYCODE_Q)
+	PORT_START("A") // analog button
+	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("A") PORT_SENSITIVITY(100) PORT_KEYDELTA(32)  PORT_MINMAX(0, 0xff)
+		PORT_CODE_INC(KEYCODE_SPACE)
 
-	PORT_START("BRed") // analog button
-	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("B-Red") PORT_SENSITIVITY(100) PORT_KEYDELTA(32) PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_S) PORT_CODE_INC(KEYCODE_W)
+	PORT_START("B") // analog button
+	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("B") PORT_SENSITIVITY(100) PORT_KEYDELTA(32) PORT_MINMAX(0, 0xff)
+		PORT_CODE_INC(KEYCODE_LALT)
 
-	PORT_START("XBlue") // analog button
-	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("X-Blue") PORT_SENSITIVITY(100) PORT_KEYDELTA(32) PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_D) PORT_CODE_INC(KEYCODE_E)
+	PORT_START("X") // analog button
+	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("X") PORT_SENSITIVITY(100) PORT_KEYDELTA(32) PORT_MINMAX(0, 0xff)
+		PORT_CODE_INC(KEYCODE_LCONTROL)
 
-	PORT_START("YYellow") // analog button
-	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("Y-Yellow") PORT_SENSITIVITY(100) PORT_KEYDELTA(32) PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_F) PORT_CODE_INC(KEYCODE_R)
-
-	PORT_START("Black") // analog button
-	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("Black") PORT_SENSITIVITY(100) PORT_KEYDELTA(32) PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_G) PORT_CODE_INC(KEYCODE_T)
+	PORT_START("Y") // analog button
+	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("Y") PORT_SENSITIVITY(100) PORT_KEYDELTA(32) PORT_MINMAX(0, 0xff)
+		PORT_CODE_INC(KEYCODE_LSHIFT)
 
 	PORT_START("White") // analog button
 	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("White") PORT_SENSITIVITY(100) PORT_KEYDELTA(32) PORT_MINMAX(0, 0xff)
-		PORT_CODE_DEC(KEYCODE_H) PORT_CODE_INC(KEYCODE_Y)
+		PORT_CODE_INC(KEYCODE_F)
+
+	PORT_START("Black") // analog button
+	PORT_BIT(0xff, 0x00, IPT_PEDAL) PORT_NAME("Black") PORT_SENSITIVITY(100) PORT_KEYDELTA(32) PORT_MINMAX(0, 0xff)
+		PORT_CODE_INC(KEYCODE_G)
 INPUT_PORTS_END
 
 const USBStandardDeviceDescriptor ohci_game_controller_device::devdesc = { 18,1,0x110,0x00,0x00,0x00,64,0x45e,0x202,0x100,0,0,0,1 };
@@ -1427,12 +1427,12 @@ ohci_game_controller_device::ohci_game_controller_device(const machine_config &m
 	m_TriggerL(*this, "TriggerL"),
 	m_TriggerR(*this, "TriggerR"),
 	m_Buttons(*this, "Buttons"),
-	m_AGreen(*this, "AGreen"),
-	m_BRed(*this, "BRed"),
-	m_XBlue(*this, "XBlue"),
-	m_YYellow(*this, "YYellow"),
-	m_Black(*this, "Black"),
-	m_White(*this, "White")
+	m_AGreen(*this, "A"),
+	m_BRed(*this, "B"),
+	m_XBlue(*this, "X"),
+	m_YYellow(*this, "Y"),
+	m_White(*this, "White"),
+	m_Black(*this, "Black")
 {
 }
 
