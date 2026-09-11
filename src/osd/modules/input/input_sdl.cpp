@@ -691,13 +691,11 @@ protected:
 		device.add_item(
 				"X",
 				std::string_view(),
-				ITEM_ID_XAXIS,
 				generic_axis_get_state<s32>,
 				&m_mouse.lX);
 		device.add_item(
 				"Y",
 				std::string_view(),
-				ITEM_ID_YAXIS,
 				generic_axis_get_state<s32>,
 				&m_mouse.lY);
 
@@ -1321,12 +1319,12 @@ public:
 
 		// add axes
 		std::tuple<SDL_GameControllerAxis, input_item_id, bool> const axes[]{
-				{ SDL_CONTROLLER_AXIS_LEFTX,        ITEM_ID_XAXIS,   false },
-				{ SDL_CONTROLLER_AXIS_LEFTY,        ITEM_ID_YAXIS,   false },
-				{ SDL_CONTROLLER_AXIS_RIGHTX,       ITEM_ID_ZAXIS,   false },
-				{ SDL_CONTROLLER_AXIS_RIGHTY,       ITEM_ID_RZAXIS,  false },
-				{ SDL_CONTROLLER_AXIS_TRIGGERLEFT,  ITEM_ID_SLIDER1, true },
-				{ SDL_CONTROLLER_AXIS_TRIGGERRIGHT, ITEM_ID_SLIDER2, true } };
+				{ SDL_CONTROLLER_AXIS_LEFTX,        ITEM_ID_LEFTX,   false },
+				{ SDL_CONTROLLER_AXIS_LEFTY,        ITEM_ID_LEFTY,   false },
+				{ SDL_CONTROLLER_AXIS_RIGHTX,       ITEM_ID_RIGHTX,   false },
+				{ SDL_CONTROLLER_AXIS_RIGHTY,       ITEM_ID_RIGHTY,  false },
+				{ SDL_CONTROLLER_AXIS_TRIGGERLEFT,  ITEM_ID_LEFTTRIGGER, true },
+				{ SDL_CONTROLLER_AXIS_TRIGGERRIGHT, ITEM_ID_RIGHTTRIGGER, true } };
 		for (auto [axis, item, buttontest] : axes)
 		{
 			bool avail = !buttontest || !digitaltriggers;
@@ -1454,12 +1452,12 @@ public:
 
 		// add buttons with fixed item IDs
 		std::pair<SDL_GameControllerButton, input_item_id> const fixedbuttons[]{
-				{ SDL_CONTROLLER_BUTTON_BACK,       ITEM_ID_SELECT },
+				{ SDL_CONTROLLER_BUTTON_BACK,       ITEM_ID_BACK },
 				{ SDL_CONTROLLER_BUTTON_START,      ITEM_ID_START },
-				{ SDL_CONTROLLER_BUTTON_DPAD_UP,    ITEM_ID_HAT1UP },
-				{ SDL_CONTROLLER_BUTTON_DPAD_DOWN,  ITEM_ID_HAT1DOWN },
-				{ SDL_CONTROLLER_BUTTON_DPAD_LEFT,  ITEM_ID_HAT1LEFT },
-				{ SDL_CONTROLLER_BUTTON_DPAD_RIGHT, ITEM_ID_HAT1RIGHT } };
+				{ SDL_CONTROLLER_BUTTON_DPAD_UP,    ITEM_ID_DPADUP },
+				{ SDL_CONTROLLER_BUTTON_DPAD_DOWN,  ITEM_ID_DPADDOWN },
+				{ SDL_CONTROLLER_BUTTON_DPAD_LEFT,  ITEM_ID_DPADLEFT },
+				{ SDL_CONTROLLER_BUTTON_DPAD_RIGHT, ITEM_ID_DPADRIGHT } };
 		for (auto [button, item] : fixedbuttons)
 		{
 			bool avail = true;
