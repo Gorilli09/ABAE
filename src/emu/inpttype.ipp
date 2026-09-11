@@ -47,8 +47,42 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  BUTTON14,            N_p("input-name", "%p Button 14"),           input_seq(KEYCODE_SLASH) ) \
 		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  BUTTON15,            N_p("input-name", "%p Button 15"),           input_seq(KEYCODE_RSHIFT) ) \
 		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  BUTTON16,            N_p("input-name", "%p Button 16"),           input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  START,               N_p("input-name", "%p Start"),               input_seq(KEYCODE_F1) ) \
 		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  SELECT,              N_p("input-name", "%p Select"),              input_seq(KEYCODE_1) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  START,               N_p("input-name", "%p Start"),               input_seq(KEYCODE_F1) ) \
+		CORE_INPUT_TYPES_END()
+
+#define CORE_INPUT_TYPES_P1_STREETFIGHTER \
+		CORE_INPUT_TYPES_BEGIN(p1_streetfighter) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  SF_LP,          N_p("input-name", "%p Light punch"),        input_seq(KEYCODE_A) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  SF_MP,          N_p("input-name", "%p Medium punch"),        input_seq(KEYCODE_S) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  SF_HP,          N_p("input-name", "%p Heavy punch"),        input_seq(KEYCODE_D) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  SF_LK,          N_p("input-name", "%p Light kick"),        input_seq(KEYCODE_Z) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  SF_MK,          N_p("input-name", "%p Medium kick"),        input_seq(KEYCODE_X) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  SF_HK,          N_p("input-name", "%p Heavy kick"),        input_seq(KEYCODE_C) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  SF_PPP,          N_p("input-name", "%p Punch x 3"),        input_seq(KEYCODE_Q) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  SF_KKK,          N_p("input-name", "%p Kick x 3"),        input_seq(KEYCODE_W) ) \
+		CORE_INPUT_TYPES_END()
+
+#define CORE_INPUT_TYPES_P1_NEOGEO \
+		CORE_INPUT_TYPES_BEGIN(p1_neogeo) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  NEOGEO_A,          N_p("input-name", "%p Neo Geo A"),        input_seq(KEYCODE_LCONTROL) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  NEOGEO_B,          N_p("input-name", "%p Neo Geo B"),        input_seq(KEYCODE_SPACE) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  NEOGEO_C,          N_p("input-name", "%p Neo Geo C"),        input_seq(KEYCODE_LALT) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  NEOGEO_D,          N_p("input-name", "%p Neo Geo D"),        input_seq(KEYCODE_LSHIFT) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  NEOGEO_AB,          N_p("input-name", "%p Neo Geo A + B"),        input_seq(KEYCODE_A) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  NEOGEO_CD,          N_p("input-name", "%p Neo Geo C + D"),        input_seq(KEYCODE_S) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  NEOGEO_ABC,          N_p("input-name", "%p Neo Geo A + B + C"),        input_seq(KEYCODE_Q) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  NEOGEO_BCD,          N_p("input-name", "%p Neo Geo B + C + D"),        input_seq(KEYCODE_W) ) \
+		CORE_INPUT_TYPES_END()
+
+#define CORE_INPUT_TYPES_P1_MORTALKOMBAT \
+		CORE_INPUT_TYPES_BEGIN(p1_mortalkombat) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  MK_LP,          N_p("input-name", "%p Low punch"),        input_seq(KEYCODE_Z) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  MK_LK,          N_p("input-name", "%p Low kick"),        input_seq(KEYCODE_C) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  MK_HP,          N_p("input-name", "%p High punch"),        input_seq(KEYCODE_A) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  MK_HK,          N_p("input-name", "%p High kick"),        input_seq(KEYCODE_D) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  MK_B,          N_p("input-name", "%p Block"),        input_seq(KEYCODE_S) ) \
+		INPUT_PORT_DIGITAL_TYPE(  1, PLAYER1,  MK_R,          N_p("input-name", "%p Run"),        input_seq(KEYCODE_LSHIFT) ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_P1_MAHJONG \
@@ -164,8 +198,42 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  BUTTON14,            N_p("input-name", "%p Button 14"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  BUTTON15,            N_p("input-name", "%p Button 15"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  BUTTON16,            N_p("input-name", "%p Button 16"),           input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  START,               N_p("input-name", "%p Start"),               input_seq(KEYCODE_F2) ) \
 		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  SELECT,              N_p("input-name", "%p Select"),              input_seq(KEYCODE_2) ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  START,               N_p("input-name", "%p Start"),               input_seq(KEYCODE_F2) ) \
+		CORE_INPUT_TYPES_END()
+
+#define CORE_INPUT_TYPES_P2_STREETFIGHTER \
+		CORE_INPUT_TYPES_BEGIN(p2_streetfighter) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  SF_LP,          N_p("input-name", "%p Light punch"),        input_seq(KEYCODE_L) ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  SF_MP,          N_p("input-name", "%p Medium punch"),        input_seq(KEYCODE_COLON) ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  SF_HP,          N_p("input-name", "%p Heavy punch"),        input_seq(KEYCODE_QUOTE) ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  SF_LK,          N_p("input-name", "%p Light kick"),        input_seq(KEYCODE_COMMA) ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  SF_MK,          N_p("input-name", "%p Medium kick"),        input_seq(KEYCODE_STOP) ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  SF_HK,          N_p("input-name", "%p Heavy kick"),        input_seq(KEYCODE_SLASH) ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  SF_PPP,          N_p("input-name", "%p Punch x 3"),        input_seq(KEYCODE_LEFTBRACKET) ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  SF_KKK,          N_p("input-name", "%p Kick x 3"),        input_seq(KEYCODE_RIGHTBRACKET) ) \
+		CORE_INPUT_TYPES_END()
+
+#define CORE_INPUT_TYPES_P2_NEOGEO \
+		CORE_INPUT_TYPES_BEGIN(p2_neogeo) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  NEOGEO_A,          N_p("input-name", "%p Neo Geo A"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  NEOGEO_B,          N_p("input-name", "%p Neo Geo B"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  NEOGEO_C,          N_p("input-name", "%p Neo Geo C"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  NEOGEO_D,          N_p("input-name", "%p Neo Geo D"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  NEOGEO_AB,          N_p("input-name", "%p Neo Geo A + B"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  NEOGEO_CD,          N_p("input-name", "%p Neo Geo C + D"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  NEOGEO_ABC,          N_p("input-name", "%p Neo Geo A + B + C"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  NEOGEO_BCD,          N_p("input-name", "%p Neo Geo B + C + D"),        input_seq() ) \
+		CORE_INPUT_TYPES_END()
+
+#define CORE_INPUT_TYPES_P2_MORTALKOMBAT \
+		CORE_INPUT_TYPES_BEGIN(p2_mortalkombat) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  MK_LP,          N_p("input-name", "%p Low punch"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  MK_LK,          N_p("input-name", "%p Low kick"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  MK_HP,          N_p("input-name", "%p High punch"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  MK_HK,          N_p("input-name", "%p High kick"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  MK_B,          N_p("input-name", "%p Block"),        input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  2, PLAYER2,  MK_R,          N_p("input-name", "%p Run"),        input_seq() ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_P2_MAHJONG \
@@ -245,8 +313,8 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE(  3, PLAYER3,  BUTTON14,            N_p("input-name", "%p Button 14"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  3, PLAYER3,  BUTTON15,            N_p("input-name", "%p Button 15"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  3, PLAYER3,  BUTTON16,            N_p("input-name", "%p Button 16"),           input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  3, PLAYER3,  START,               N_p("input-name", "%p Start"),               input_seq(KEYCODE_F3) ) \
 		INPUT_PORT_DIGITAL_TYPE(  3, PLAYER3,  SELECT,              N_p("input-name", "%p Select"),              input_seq(KEYCODE_3) ) \
+		INPUT_PORT_DIGITAL_TYPE(  3, PLAYER3,  START,               N_p("input-name", "%p Start"),               input_seq(KEYCODE_F3) ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_P3_MAHJONG \
@@ -326,8 +394,8 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE(  4, PLAYER4,  BUTTON14,            N_p("input-name", "%p Button 14"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  4, PLAYER4,  BUTTON15,            N_p("input-name", "%p Button 15"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  4, PLAYER4,  BUTTON16,            N_p("input-name", "%p Button 16"),           input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  4, PLAYER4,  START,               N_p("input-name", "%p Start"),               input_seq(KEYCODE_F4) ) \
 		INPUT_PORT_DIGITAL_TYPE(  4, PLAYER4,  SELECT,              N_p("input-name", "%p Select"),              input_seq(KEYCODE_4) ) \
+		INPUT_PORT_DIGITAL_TYPE(  4, PLAYER4,  START,               N_p("input-name", "%p Start"),               input_seq(KEYCODE_F4) ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_P4_MAHJONG \
@@ -407,8 +475,8 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE(  5, PLAYER5,  BUTTON14,            N_p("input-name", "%p Button 14"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  5, PLAYER5,  BUTTON15,            N_p("input-name", "%p Button 15"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  5, PLAYER5,  BUTTON16,            N_p("input-name", "%p Button 16"),           input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  5, PLAYER5,  START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  5, PLAYER5,  SELECT,              N_p("input-name", "%p Select"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  5, PLAYER5,  START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_P6 \
@@ -441,8 +509,8 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE(  6, PLAYER6,  BUTTON14,            N_p("input-name", "%p Button 14"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  6, PLAYER6,  BUTTON15,            N_p("input-name", "%p Button 15"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  6, PLAYER6,  BUTTON16,            N_p("input-name", "%p Button 16"),           input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  6, PLAYER6,  START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  6, PLAYER6,  SELECT,              N_p("input-name", "%p Select"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  6, PLAYER6,  START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_P7 \
@@ -475,8 +543,8 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE(  7, PLAYER7,  BUTTON14,            N_p("input-name", "%p Button 14"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  7, PLAYER7,  BUTTON15,            N_p("input-name", "%p Button 15"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  7, PLAYER7,  BUTTON16,            N_p("input-name", "%p Button 16"),           input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  7, PLAYER7,  START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  7, PLAYER7,  SELECT,              N_p("input-name", "%p Select"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  7, PLAYER7,  START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_P8 \
@@ -509,8 +577,8 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE(  8, PLAYER8,  BUTTON14,            N_p("input-name", "%p Button 14"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  8, PLAYER8,  BUTTON15,            N_p("input-name", "%p Button 15"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  8, PLAYER8,  BUTTON16,            N_p("input-name", "%p Button 16"),           input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  8, PLAYER8,  START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  8, PLAYER8,  SELECT,              N_p("input-name", "%p Select"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  8, PLAYER8,  START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_P9 \
@@ -543,8 +611,8 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE(  9, PLAYER9,  BUTTON14,            N_p("input-name", "%p Button 14"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  9, PLAYER9,  BUTTON15,            N_p("input-name", "%p Button 15"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  9, PLAYER9,  BUTTON16,            N_p("input-name", "%p Button 16"),           input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE(  9, PLAYER9,  START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE(  9, PLAYER9,  SELECT,              N_p("input-name", "%p Select"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE(  9, PLAYER9,  START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_P10 \
@@ -577,8 +645,8 @@ namespace {
 		INPUT_PORT_DIGITAL_TYPE( 10, PLAYER10, BUTTON14,            N_p("input-name", "%p Button 14"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE( 10, PLAYER10, BUTTON15,            N_p("input-name", "%p Button 15"),           input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE( 10, PLAYER10, BUTTON16,            N_p("input-name", "%p Button 16"),           input_seq() ) \
-		INPUT_PORT_DIGITAL_TYPE( 10, PLAYER10, START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		INPUT_PORT_DIGITAL_TYPE( 10, PLAYER10, SELECT,              N_p("input-name", "%p Select"),              input_seq() ) \
+		INPUT_PORT_DIGITAL_TYPE( 10, PLAYER10, START,               N_p("input-name", "%p Start"),               input_seq() ) \
 		CORE_INPUT_TYPES_END()
 
 #define CORE_INPUT_TYPES_START \
@@ -1030,12 +1098,18 @@ ATTR_COLD void emplace_core_analog_type(std::vector<input_type_entry> &typelist,
 #define CORE_INPUT_TYPES_END() \
 		}
 CORE_INPUT_TYPES_P1
+CORE_INPUT_TYPES_P1_STREETFIGHTER
+CORE_INPUT_TYPES_P1_NEOGEO
+CORE_INPUT_TYPES_P1_MORTALKOMBAT
 CORE_INPUT_TYPES_P1_MAHJONG
 CORE_INPUT_TYPES_P1_HANAFUDA
 CORE_INPUT_TYPES_GAMBLE
 CORE_INPUT_TYPES_POKER
 CORE_INPUT_TYPES_SLOT
 CORE_INPUT_TYPES_P2
+CORE_INPUT_TYPES_P2_STREETFIGHTER
+CORE_INPUT_TYPES_P2_NEOGEO
+CORE_INPUT_TYPES_P2_MORTALKOMBAT
 CORE_INPUT_TYPES_P2_MAHJONG
 CORE_INPUT_TYPES_P2_HANAFUDA
 CORE_INPUT_TYPES_P3
@@ -1054,9 +1128,14 @@ CORE_INPUT_TYPES_START
 CORE_INPUT_TYPES_COIN
 CORE_INPUT_TYPES_SERVICE
 CORE_INPUT_TYPES_OTHER
+CORE_INPUT_TYPES_AD_STICK_X
+CORE_INPUT_TYPES_AD_STICK_Y
+CORE_INPUT_TYPES_AD_STICK_Z
+CORE_INPUT_TYPES_WHEEL
 CORE_INPUT_TYPES_PEDAL
 CORE_INPUT_TYPES_PEDAL2
 CORE_INPUT_TYPES_PEDAL3
+CORE_INPUT_TYPES_WHEEL_V
 CORE_INPUT_TYPES_PADDLE
 CORE_INPUT_TYPES_PADDLE_V
 CORE_INPUT_TYPES_POSITIONAL
@@ -1065,9 +1144,6 @@ CORE_INPUT_TYPES_DIAL
 CORE_INPUT_TYPES_DIAL_V
 CORE_INPUT_TYPES_TRACKBALL_X
 CORE_INPUT_TYPES_TRACKBALL_Y
-CORE_INPUT_TYPES_AD_STICK_X
-CORE_INPUT_TYPES_AD_STICK_Y
-CORE_INPUT_TYPES_AD_STICK_Z
 CORE_INPUT_TYPES_LIGHTGUN_X
 CORE_INPUT_TYPES_LIGHTGUN_Y
 CORE_INPUT_TYPES_MOUSE_X
@@ -1091,12 +1167,18 @@ constexpr size_t core_input_types_count()
 {
 	return 0
 			CORE_INPUT_TYPES_P1
+			CORE_INPUT_TYPES_P1_STREETFIGHTER
+			CORE_INPUT_TYPES_P1_NEOGEO
+			CORE_INPUT_TYPES_P1_MORTALKOMBAT
 			CORE_INPUT_TYPES_P1_MAHJONG
 			CORE_INPUT_TYPES_P1_HANAFUDA
 			CORE_INPUT_TYPES_GAMBLE
 			CORE_INPUT_TYPES_POKER
 			CORE_INPUT_TYPES_SLOT
 			CORE_INPUT_TYPES_P2
+			CORE_INPUT_TYPES_P2_STREETFIGHTER
+			CORE_INPUT_TYPES_P2_NEOGEO
+			CORE_INPUT_TYPES_P2_MORTALKOMBAT
 			CORE_INPUT_TYPES_P2_MAHJONG
 			CORE_INPUT_TYPES_P2_HANAFUDA
 			CORE_INPUT_TYPES_P3
@@ -1115,9 +1197,14 @@ constexpr size_t core_input_types_count()
 			CORE_INPUT_TYPES_COIN
 			CORE_INPUT_TYPES_SERVICE
 			CORE_INPUT_TYPES_OTHER
+			CORE_INPUT_TYPES_AD_STICK_X
+			CORE_INPUT_TYPES_AD_STICK_Y
+			CORE_INPUT_TYPES_AD_STICK_Z
+			CORE_INPUT_TYPES_WHEEL
 			CORE_INPUT_TYPES_PEDAL
 			CORE_INPUT_TYPES_PEDAL2
 			CORE_INPUT_TYPES_PEDAL3
+			CORE_INPUT_TYPES_WHEEL_V
 			CORE_INPUT_TYPES_PADDLE
 			CORE_INPUT_TYPES_PADDLE_V
 			CORE_INPUT_TYPES_POSITIONAL
@@ -1126,9 +1213,6 @@ constexpr size_t core_input_types_count()
 			CORE_INPUT_TYPES_DIAL_V
 			CORE_INPUT_TYPES_TRACKBALL_X
 			CORE_INPUT_TYPES_TRACKBALL_Y
-			CORE_INPUT_TYPES_AD_STICK_X
-			CORE_INPUT_TYPES_AD_STICK_Y
-			CORE_INPUT_TYPES_AD_STICK_Z
 			CORE_INPUT_TYPES_LIGHTGUN_X
 			CORE_INPUT_TYPES_LIGHTGUN_Y
 			CORE_INPUT_TYPES_MOUSE_X
@@ -1150,12 +1234,18 @@ ATTR_COLD inline void emplace_core_types(std::vector<input_type_entry> &typelist
 	typelist.reserve(core_input_types_count());
 
 	emplace_core_types_p1(typelist);
+	emplace_core_types_p1_streetfighter(typelist);
+	emplace_core_types_p1_neogeo(typelist);
+	emplace_core_types_p1_mortalkombat(typelist);
 	emplace_core_types_p1_mahjong(typelist);
 	emplace_core_types_p1_hanafuda(typelist);
 	emplace_core_types_gamble(typelist);
 	emplace_core_types_poker(typelist);
 	emplace_core_types_slot(typelist);
 	emplace_core_types_p2(typelist);
+	emplace_core_types_p2_streetfighter(typelist);
+	emplace_core_types_p2_neogeo(typelist);
+	emplace_core_types_p2_mortalkombat(typelist);
 	emplace_core_types_p2_mahjong(typelist);
 	emplace_core_types_p2_hanafuda(typelist);
 	emplace_core_types_p3(typelist);
@@ -1174,9 +1264,14 @@ ATTR_COLD inline void emplace_core_types(std::vector<input_type_entry> &typelist
 	emplace_core_types_coin(typelist);
 	emplace_core_types_service(typelist);
 	emplace_core_types_other(typelist);
+	emplace_core_types_ad_stick_x(typelist);
+	emplace_core_types_ad_stick_y(typelist);
+	emplace_core_types_ad_stick_z(typelist);
+	emplace_core_types_wheel(typelist);
 	emplace_core_types_pedal(typelist);
 	emplace_core_types_pedal2(typelist);
 	emplace_core_types_pedal3(typelist);
+	emplace_core_types_wheel_v(typelist);
 	emplace_core_types_paddle(typelist);
 	emplace_core_types_paddle_v(typelist);
 	emplace_core_types_positional(typelist);
@@ -1185,9 +1280,6 @@ ATTR_COLD inline void emplace_core_types(std::vector<input_type_entry> &typelist
 	emplace_core_types_dial_v(typelist);
 	emplace_core_types_trackball_x(typelist);
 	emplace_core_types_trackball_y(typelist);
-	emplace_core_types_ad_stick_x(typelist);
-	emplace_core_types_ad_stick_y(typelist);
-	emplace_core_types_ad_stick_z(typelist);
 	emplace_core_types_lightgun_x(typelist);
 	emplace_core_types_lightgun_y(typelist);
 	emplace_core_types_mouse_x(typelist);
