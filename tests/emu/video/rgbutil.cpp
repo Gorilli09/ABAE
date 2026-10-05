@@ -67,7 +67,7 @@ TEST_CASE("check rgb", "[emu][video]")
 		const volatile s32 g = rgb.get_g32();
 		const volatile s32 b = rgb.get_b32();
 		REQUIRE(a == expected_a);
-		(r == expected_r);
+		REQUIRE(r == expected_r);
 		REQUIRE(g == expected_g);
 		REQUIRE(b == expected_b);
 	};
